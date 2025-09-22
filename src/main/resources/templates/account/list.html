@@ -61,11 +61,19 @@
 
     <!-- 収入カテゴリグラフ -->
      <div class="text-center mb-5">
-  <h2 class="mb-3">カテゴリ別収入グラフ</h2>
-  <div style="max-width: 100%; margin: 0 auto;">
+    <h2 class="mb-3">カテゴリ別収入グラフ</h2>
+    <div style="max-width: 100%; margin: 0 auto;">
     <canvas id="incomeChart"></canvas>
+    </div>
+      </div>
+    <!-- 月別推移グラフ -->
+     <div class="text-center mb-5">
+  <h2 class="mb-3">月別収支推移グラフ</h2>
+  <div style="max-width: 100%; margin: 0 auto;">
+    <canvas id="monthlyChart"></canvas>
   </div>
 </div>
+
 
 
     <!-- 新規登録リンク -->
@@ -110,6 +118,8 @@
     /*<![CDATA[*/
     window.categoryData = /*[[${categoryTotals}]]*/ {};
     window.incomeCategoryData = /*[[${incomeCategoryTotals}]]*/ {};
+    window.monthlyIncome = /*[[${monthlyIncome}]]*/ {};
+    window.monthlyExpense = /*[[${monthlyExpense}]]*/ {};
 
     /*]]>*/
 

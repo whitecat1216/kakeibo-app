@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -90,6 +91,18 @@ public class AccountService {
     Map<String, Integer> totals = new HashMap<>();
     for (Account a : accounts) {
         totals.merge(a.getCategory(), a.getAmount(), Integer::sum);
+    }
+    return totals;
+}
+    //月別集計メソッドを追加
+    public Map<Integer, Integer> getMonthlyTotals(String type, int year) {
+    Map<Integer, Integer> totals = new LinkedHashMap<>();
+    for (int month = 1; month <= 12; month++) {
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+        List<Account> accounts = accountRepository.findByTypeAndDateBetween(type, start, end);
+        int total = accounts.stream().mapToInt(Account::getAmount).sum();
+        totals.put(month, total);
     }
     return totals;
 }

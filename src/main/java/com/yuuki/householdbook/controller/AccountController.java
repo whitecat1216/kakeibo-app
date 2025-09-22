@@ -47,6 +47,10 @@ public class AccountController {
         // ✅ 収入カテゴリ別集計を取得
         Map<String, Integer> incomeCategoryTotals = accountService.getIncomeCategoryTotals(year, month);
         System.out.println("収入カテゴリ別集計: " + incomeCategoryTotals);
+        //月別集計メッソドを追加
+        Map<Integer, Integer> monthlyIncome = accountService.getMonthlyTotals("income", year);
+        Map<Integer, Integer> monthlyExpense = accountService.getMonthlyTotals("expense", year);
+
 
         List<Account> accounts = accountService.getAccountsByMonth(year, month);
 
@@ -58,6 +62,9 @@ public class AccountController {
         model.addAttribute("accounts", accounts);
         model.addAttribute("year", year);
         model.addAttribute("month", month);
+        model.addAttribute("monthlyIncome", monthlyIncome);
+        model.addAttribute("monthlyExpense", monthlyExpense);
+
 
         return "account/list";
     }
