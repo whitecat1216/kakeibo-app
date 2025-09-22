@@ -3,16 +3,11 @@ package com.yuuki.householdbook.controller;
 import com.yuuki.householdbook.entity.Account;
 import com.yuuki.householdbook.repository.AccountRepository;
 import com.yuuki.householdbook.service.AccountService;
-
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.List;
@@ -100,31 +95,4 @@ public class AccountController {
         accountService.deleteAccount(id);
         return "redirect:/accounts";
     }
-    //CSV出力処理を追加
-   @GetMapping("/export")
-    public void exportCsv(@RequestParam(required = false) Integer year,
-                      @RequestParam(required = false) Integer month,
-                      HttpServletResponse response) throws IOException {
-
-    response.setContentType("text/csv; charset=UTF-8");
-    response.setHeader("Content-Disposition", "attachment; filename=\"accounts.csv\"");
-
-    List<Account> accounts;
-
-    if (year != null && month != null) {
-        accounts = accountService.getAccountsByMonth(year, month);
-    } else {
-        accounts = accountService.getAllAccounts();
-    }
-
-    try (PrintWriter writer = response.getWriter()) {
-        writer.write('\uFEFF'); // Excel対応のBOM
-        writer.println("日付,タイプ,カテゴリ,項目,金額,メモ");
-        for (Account a : accounts) {
-            writer.printf("%s,%s,%s,%s,%d,%s%n",
-                a.getDate(), a.getType(), a.getCategory(), a.getItem(), a.getAmount(), a.getMemo());
-        }
-    }
-}
-
 }
