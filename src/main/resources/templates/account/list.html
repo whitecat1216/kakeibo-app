@@ -59,6 +59,15 @@
       </div>
     </div>
 
+    <!-- 収入カテゴリグラフ -->
+     <div class="text-center mb-5">
+  <h2 class="mb-3">カテゴリ別収入グラフ</h2>
+  <div style="max-width: 100%; margin: 0 auto;">
+    <canvas id="incomeChart"></canvas>
+  </div>
+</div>
+
+
     <!-- 新規登録リンク -->
     <div class="mb-3 text-end">
       <a href="/accounts/new" class="btn btn-success">新規登録</a>
@@ -100,7 +109,10 @@
   <script th:inline="javascript">
     /*<![CDATA[*/
     window.categoryData = /*[[${categoryTotals}]]*/ {};
+    window.incomeCategoryData = /*[[${incomeCategoryTotals}]]*/ {};
+
     /*]]>*/
+
   </script>
 
   <!-- Chart.js 読み込み -->

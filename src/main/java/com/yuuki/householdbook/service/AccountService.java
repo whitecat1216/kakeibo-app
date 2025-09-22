@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -79,6 +80,18 @@ public class AccountService {
             Account::getCategory,
             Collectors.summingInt(Account::getAmount)
         ));
+}
+    //収入カテゴリ集計メソッドを追加
+    public Map<String, Integer> getIncomeCategoryTotals(int year, int month) {
+    LocalDate start = LocalDate.of(year, month, 1);
+    LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+
+    List<Account> accounts = accountRepository.findByTypeAndDateBetween("income", start, end);
+    Map<String, Integer> totals = new HashMap<>();
+    for (Account a : accounts) {
+        totals.merge(a.getCategory(), a.getAmount(), Integer::sum);
+    }
+    return totals;
 }
 }
 
