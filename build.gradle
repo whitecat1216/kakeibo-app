@@ -1,48 +1,38 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.2.5' // Spring Boot 3.5.6 は存在しないため、安定版に修正
-    id 'io.spring.dependency-management' version '1.1.4'
+	id 'java'
+	id 'org.springframework.boot' version '3.5.6'
+	id 'io.spring.dependency-management' version '1.1.7'
 }
 
-group = 'com.yuuki'
+group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-description = 'Household Book Application'
+description = 'Demo project for Spring Boot'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
-    // Webアプリケーション
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-
-    // Thymeleafテンプレートエンジン
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-
-    // Spring Security（ログイン機能）
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-
-    // JPA（DB操作）
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    // PostgreSQLドライバ
-    runtimeOnly 'org.postgresql:postgresql'
-
-    // テスト関連
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	runtimeOnly 'org.postgresql:postgresql'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+	useJUnitPlatform()
 }
 
 springBoot {
     mainClass = 'com.yuuki.householdbook.HouseholdBookApplication'
 }
+
+
