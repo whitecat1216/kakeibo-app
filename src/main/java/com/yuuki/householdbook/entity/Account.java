@@ -25,6 +25,10 @@ public class Account {
 
     private LocalDate createdAt = LocalDate.now();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private AppUser user;
+
     // --- Getter & Setter ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -49,4 +53,7 @@ public class Account {
 
     public LocalDate getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+    public AppUser getUser() { return user; }
+    public void setUser(AppUser user) { this.user = user; }
 }

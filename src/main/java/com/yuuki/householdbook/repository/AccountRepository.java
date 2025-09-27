@@ -1,6 +1,7 @@
 package com.yuuki.householdbook.repository;
 
 import com.yuuki.householdbook.entity.Account;
+import com.yuuki.householdbook.entity.AppUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,25 +13,14 @@ import java.util.List;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    // 日付で絞り込み
-    List<Account> findByDate(LocalDate date);
+    List<Account> findByUser(AppUser user);
 
-    // 収支タイプで絞り込み（income / expense）
-    List<Account> findByType(String type);
+    @Query("SELECT a FROM Account a WHERE a.user = :user AND FUNCTION('YEAR', a.date) = :year AND FUNCTION('MONTH', a.date) = :month")
+    List<Account> findByUserAndMonth(@Param("user") AppUser user, @Param("year") int year, @Param("month") int month);
 
-    // カテゴリで絞り込み
-    List<Account> findByCategory(String category);
+    @Query("SELECT a FROM Account a WHERE a.user = :user AND a.type = :type AND FUNCTION('YEAR', a.date) = :year AND FUNCTION('MONTH', a.date) = :month")
+    List<Account> findByUserAndTypeAndMonth(@Param("user") AppUser user, @Param("type") String type, @Param("year") int year, @Param("month") int month);
 
-    // 金額の昇順で取得
-    List<Account> findAllByOrderByAmountAsc();
-
-    // 収支タイプと日付範囲で絞り込み
-    List<Account> findByTypeAndDateBetween(String type, LocalDate start, LocalDate end);
-
-    // 日付範囲で絞り込み
-    List<Account> findByDateBetween(LocalDate start, LocalDate end);
-
-    // 年月と収支タイプで絞り込み（収入カテゴリグラフ用）
-    @Query("SELECT a FROM Account a WHERE a.type = :type AND FUNCTION('YEAR', a.date) = :year AND FUNCTION('MONTH', a.date) = :month")
-    List<Account> findByTypeAndMonth(@Param("type") String type, @Param("year") int year, @Param("month") int month);
+    @Query("SELECT FUNCTION('MONTH', a.date) AS month, SUM(a.amount) FROM Account a WHERE a.user = :user AND a.type = :type AND FUNCTION('YEAR', a.date) = :year GROUP BY FUNCTION('MONTH', a.date)")
+    List<Object[]> getMonthlyTotalsByUser(@Param("user") AppUser user, @Param("type") String type, @Param("year") int year);
 }
