@@ -17,13 +17,11 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // 登録フォーム表示
     @GetMapping("/register")
     public String showRegisterForm() {
-        return "user/register";
+        return "users/register";
     }
 
-    // 登録処理
     @PostMapping("/register")
     public String registerUser(@RequestParam String username,
                                @RequestParam String password) {
