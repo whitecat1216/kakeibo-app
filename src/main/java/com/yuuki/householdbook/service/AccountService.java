@@ -6,7 +6,6 @@ import com.yuuki.householdbook.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,7 +17,7 @@ public class AccountService {
 
     // 月別データ取得
     public List<Account> getAccountsByMonth(AppUser user, int year, int month) {
-        return accountRepository.findByUserAndMonth(user, year, month);
+        return accountRepository.findByUserAndMonth(user.getId(), year, month);
     }
 
     // 全データ取得（ログインユーザーのみ）
@@ -41,15 +40,26 @@ public class AccountService {
         accountRepository.deleteById(id);
     }
 
+    // 所有者チェック付きの削除処理
+    public void deleteAccountByUser(Long id, AppUser user) {
+        Optional<Account> optionalAccount = accountRepository.findById(id);
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            if (account.getUser().getId().equals(user.getId())) {
+                accountRepository.delete(account);
+            }
+        }
+    }
+
     // 月別合計（収入 or 支出）
     public int getMonthlyTotal(AppUser user, String type, int year, int month) {
-        List<Account> filtered = accountRepository.findByUserAndTypeAndMonth(user, type, year, month);
+        List<Account> filtered = accountRepository.findByUserAndTypeAndMonth(user.getId(), type, year, month);
         return filtered.stream().mapToInt(Account::getAmount).sum();
     }
 
     // 支出カテゴリ別集計
     public Map<String, Integer> getCategoryTotals(AppUser user, int year, int month) {
-        List<Account> accounts = accountRepository.findByUserAndTypeAndMonth(user, "expense", year, month);
+        List<Account> accounts = accountRepository.findByUserAndTypeAndMonth(user.getId(), "expense", year, month);
         return accounts.stream()
                 .collect(Collectors.groupingBy(
                         Account::getCategory,
@@ -59,7 +69,7 @@ public class AccountService {
 
     // 収入カテゴリ別集計
     public Map<String, Integer> getIncomeCategoryTotals(AppUser user, int year, int month) {
-        List<Account> accounts = accountRepository.findByUserAndTypeAndMonth(user, "income", year, month);
+        List<Account> accounts = accountRepository.findByUserAndTypeAndMonth(user.getId(), "income", year, month);
         Map<String, Integer> totals = new HashMap<>();
         for (Account a : accounts) {
             totals.merge(a.getCategory(), a.getAmount(), Integer::sum);
@@ -67,23 +77,12 @@ public class AccountService {
         return totals;
     }
 
-    // 所有者チェック付きの削除処理
-public void deleteAccountByUser(Long id, AppUser user) {
-    Optional<Account> optionalAccount = accountRepository.findById(id);
-    if (optionalAccount.isPresent()) {
-        Account account = optionalAccount.get();
-        if (account.getUser().getId().equals(user.getId())) {
-            accountRepository.delete(account);
-        }
-    }
-}
-
     // 月別推移グラフ用集計
     public Map<Integer, Integer> getMonthlyTotals(AppUser user, String type, int year) {
-        List<Object[]> results = accountRepository.getMonthlyTotalsByUser(user, type, year);
+        List<Object[]> results = accountRepository.getMonthlyTotalsByUser(user.getId(), type, year);
         Map<Integer, Integer> totals = new LinkedHashMap<>();
         for (Object[] row : results) {
-            Integer month = (Integer) row[0];
+            Integer month = ((Number) row[0]).intValue();
             Integer sum = ((Number) row[1]).intValue();
             totals.put(month, sum);
         }
