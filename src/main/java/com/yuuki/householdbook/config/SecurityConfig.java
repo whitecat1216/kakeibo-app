@@ -19,7 +19,7 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> {
             AppUser user = userRepository.findByUsername(username);
-            if (user == null) throw new UsernameNotFoundException("User not found");
+            if (user == null) throw new UsernameNotFoundException("ユーザーが見つかりません: " + username);
             return User.builder()
                     .username(user.getUsername())
                     .password(user.getPassword())
@@ -37,15 +37,18 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/users/register", "/css/**").permitAll()
+                .requestMatchers("/login", "/users/register", "/css/**", "/js/**", "/images/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/accounts")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/accounts", true)
+                .failureUrl("/login?error")
                 .permitAll()
             )
             .logout(logout -> logout
+                .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .permitAll()
             );

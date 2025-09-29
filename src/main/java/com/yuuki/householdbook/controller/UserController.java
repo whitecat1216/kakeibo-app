@@ -36,6 +36,6 @@ public class UserController {
         user.setRole("USER");
 
         userRepository.save(user);
-        return "redirect:/login";
+        return "redirect:/login?registered";
     }
 }

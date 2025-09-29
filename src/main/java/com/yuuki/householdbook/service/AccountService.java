@@ -67,6 +67,17 @@ public class AccountService {
         return totals;
     }
 
+    // 所有者チェック付きの削除処理
+public void deleteAccountByUser(Long id, AppUser user) {
+    Optional<Account> optionalAccount = accountRepository.findById(id);
+    if (optionalAccount.isPresent()) {
+        Account account = optionalAccount.get();
+        if (account.getUser().getId().equals(user.getId())) {
+            accountRepository.delete(account);
+        }
+    }
+}
+
     // 月別推移グラフ用集計
     public Map<Integer, Integer> getMonthlyTotals(AppUser user, String type, int year) {
         List<Object[]> results = accountRepository.getMonthlyTotalsByUser(user, type, year);

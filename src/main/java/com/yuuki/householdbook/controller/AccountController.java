@@ -28,7 +28,7 @@ public class AccountController {
     @Autowired
     private UserRepository userRepository;
 
-    // 一覧表示
+    // 家計簿一覧表示
     @GetMapping
     public String listAccounts(@RequestParam(required = false) Integer year,
                                @RequestParam(required = false) Integer month,
@@ -36,33 +36,27 @@ public class AccountController {
                                Model model) {
 
         AppUser user = userRepository.findByUsername(auth.getName());
+        if (user == null) return "redirect:/login";
 
-        if (year == null || month == null) {
-            LocalDate now = LocalDate.now();
-            year = now.getYear();
-            month = now.getMonthValue();
-        }
+        LocalDate now = LocalDate.now();
+        year = (year != null) ? year : now.getYear();
+        month = (month != null) ? month : now.getMonthValue();
 
         List<Account> accounts = accountService.getAccountsByMonth(user, year, month);
         int income = accountService.getMonthlyTotal(user, "income", year, month);
         int expense = accountService.getMonthlyTotal(user, "expense", year, month);
         int balance = income - expense;
 
-        Map<String, Integer> categoryTotals = accountService.getCategoryTotals(user, year, month);
-        Map<String, Integer> incomeCategoryTotals = accountService.getIncomeCategoryTotals(user, year, month);
-        Map<Integer, Integer> monthlyIncome = accountService.getMonthlyTotals(user, "income", year);
-        Map<Integer, Integer> monthlyExpense = accountService.getMonthlyTotals(user, "expense", year);
-
+        model.addAttribute("accounts", accounts);
         model.addAttribute("income", income);
         model.addAttribute("expense", expense);
         model.addAttribute("balance", balance);
-        model.addAttribute("categoryTotals", categoryTotals);
-        model.addAttribute("incomeCategoryTotals", incomeCategoryTotals);
-        model.addAttribute("accounts", accounts);
         model.addAttribute("year", year);
         model.addAttribute("month", month);
-        model.addAttribute("monthlyIncome", monthlyIncome);
-        model.addAttribute("monthlyExpense", monthlyExpense);
+        model.addAttribute("categoryTotals", accountService.getCategoryTotals(user, year, month));
+        model.addAttribute("incomeCategoryTotals", accountService.getIncomeCategoryTotals(user, year, month));
+        model.addAttribute("monthlyIncome", accountService.getMonthlyTotals(user, "income", year));
+        model.addAttribute("monthlyExpense", accountService.getMonthlyTotals(user, "expense", year));
 
         return "account/list";
     }
@@ -70,7 +64,9 @@ public class AccountController {
     // 登録フォーム表示
     @GetMapping("/new")
     public String showForm(Model model) {
-        model.addAttribute("account", new Account());
+        Account account = new Account();
+        account.setDate(LocalDate.now()); // 初期日付を今日に設定
+        model.addAttribute("account", account);
         return "account/form";
     }
 
@@ -78,15 +74,20 @@ public class AccountController {
     @PostMapping("/save")
     public String saveAccount(@ModelAttribute Account account, Authentication auth) {
         AppUser user = userRepository.findByUsername(auth.getName());
+        if (user == null) return "redirect:/login";
+
         account.setUser(user);
         accountService.saveAccount(account);
         return "redirect:/accounts";
     }
 
-    // 削除処理
+    // 削除処理（所有者チェック付きにする場合はサービス側で対応）
     @GetMapping("/delete/{id}")
-    public String deleteAccount(@PathVariable Long id) {
-        accountService.deleteAccount(id);
+    public String deleteAccount(@PathVariable Long id, Authentication auth) {
+        AppUser user = userRepository.findByUsername(auth.getName());
+        if (user == null) return "redirect:/login";
+
+        accountService.deleteAccountByUser(id, user); // 所有者チェック付きメソッドを用意
         return "redirect:/accounts";
     }
 
@@ -98,13 +99,21 @@ public class AccountController {
                           HttpServletResponse response) throws IOException {
 
         AppUser user = userRepository.findByUsername(auth.getName());
-
-        response.setContentType("text/csv; charset=UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"accounts.csv\"");
+        if (user == null) {
+            response.sendRedirect("/login");
+            return;
+        }
 
         List<Account> accounts = (year != null && month != null)
                 ? accountService.getAccountsByMonth(user, year, month)
                 : accountService.getAllAccounts(user);
+
+        String filename = (year != null && month != null)
+                ? String.format("accounts_%d_%02d.csv", year, month)
+                : "accounts.csv";
+
+        response.setContentType("text/csv; charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
         try (PrintWriter writer = response.getWriter()) {
             writer.write('\uFEFF'); // Excel対応のBOM
