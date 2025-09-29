@@ -6,8 +6,8 @@ import com.yuuki.householdbook.repository.UserRepository;
 import com.yuuki.householdbook.service.AccountService;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/accounts")
@@ -32,10 +31,10 @@ public class AccountController {
     @GetMapping
     public String listAccounts(@RequestParam(required = false) Integer year,
                                @RequestParam(required = false) Integer month,
-                               Authentication auth,
+                               HttpSession session,
                                Model model) {
 
-        AppUser user = userRepository.findByUsername(auth.getName());
+        AppUser user = (AppUser) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         LocalDate now = LocalDate.now();
@@ -63,17 +62,20 @@ public class AccountController {
 
     // 登録フォーム表示
     @GetMapping("/new")
-    public String showForm(Model model) {
+    public String showForm(HttpSession session, Model model) {
+        AppUser user = (AppUser) session.getAttribute("user");
+        if (user == null) return "redirect:/login";
+
         Account account = new Account();
-        account.setDate(LocalDate.now()); // 初期日付を今日に設定
+        account.setDate(LocalDate.now());
         model.addAttribute("account", account);
         return "account/form";
     }
 
     // 登録処理
     @PostMapping("/save")
-    public String saveAccount(@ModelAttribute Account account, Authentication auth) {
-        AppUser user = userRepository.findByUsername(auth.getName());
+    public String saveAccount(@ModelAttribute Account account, HttpSession session) {
+        AppUser user = (AppUser) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         account.setUser(user);
@@ -81,13 +83,13 @@ public class AccountController {
         return "redirect:/accounts";
     }
 
-    // 削除処理（所有者チェック付きにする場合はサービス側で対応）
+    // 削除処理
     @GetMapping("/delete/{id}")
-    public String deleteAccount(@PathVariable Long id, Authentication auth) {
-        AppUser user = userRepository.findByUsername(auth.getName());
+    public String deleteAccount(@PathVariable Long id, HttpSession session) {
+        AppUser user = (AppUser) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
-        accountService.deleteAccountByUser(id, user); // 所有者チェック付きメソッドを用意
+        accountService.deleteAccountByUser(id, user);
         return "redirect:/accounts";
     }
 
@@ -95,10 +97,10 @@ public class AccountController {
     @GetMapping("/export")
     public void exportCsv(@RequestParam(required = false) Integer year,
                           @RequestParam(required = false) Integer month,
-                          Authentication auth,
+                          HttpSession session,
                           HttpServletResponse response) throws IOException {
 
-        AppUser user = userRepository.findByUsername(auth.getName());
+        AppUser user = (AppUser) session.getAttribute("user");
         if (user == null) {
             response.sendRedirect("/login");
             return;
