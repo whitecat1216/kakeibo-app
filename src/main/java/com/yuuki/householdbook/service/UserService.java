@@ -20,5 +20,9 @@ public class UserService {
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
         user.setRole("USER");
         userRepository.save(user);
+        if (userRepository.existsByUsername(user.getUsername())){
+            throw new IllegalStateException("このユーザー名は既に登録されてます。");
+        }
+        userRepository.save(user);
     }
 }
