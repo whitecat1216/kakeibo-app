@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "accounts")
+@Table(name = "account")
 public class Account {
 
     @Id
@@ -24,6 +24,10 @@ public class Account {
     private String memo;
 
     private LocalDate createdAt = LocalDate.now();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private AppUser user;
 
     // --- Getter & Setter ---
     public Long getId() { return id; }
@@ -49,4 +53,7 @@ public class Account {
 
     public LocalDate getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+    public AppUser getUser() { return user; }
+    public void setUser(AppUser user) { this.user = user; }
 }

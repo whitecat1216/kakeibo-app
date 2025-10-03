@@ -1,17 +1,12 @@
 package com.yuuki.householdbook.service;
 
 import com.yuuki.householdbook.entity.Account;
+import com.yuuki.householdbook.entity.AppUser;
 import com.yuuki.householdbook.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
-import java.util.Map;
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,29 +14,25 @@ public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
-     public List<Account> getAccountsByMonth(int year, int month) {
-        LocalDate start = LocalDate.of(year, month, 1);
-        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-        return accountRepository.findByDateBetween(start, end);
-    }
-    // 一覧取得
-    public List<Account> getAllAccounts() {
-        return accountRepository.findAll();
+
+    // 月別データ取得
+    public List<Account> getAccountsByMonth(AppUser user, int year, int month) {
+        return accountRepository.findByUserAndMonth(user.getId(), year, month);
     }
 
-    // IDで取得
-    public Optional<Account> getAccountById(Long id) {
-        return accountRepository.findById(id);
+    // 全データ取得（ログインユーザーのみ）
+    public List<Account> getAllAccounts(AppUser user) {
+        return accountRepository.findByUser(user);
     }
 
-    // 新規登録
+    // 登録・更新
     public Account saveAccount(Account account) {
         return accountRepository.save(account);
     }
 
-    // 更新
-    public Account updateAccount(Account account) {
-        return accountRepository.save(account);
+    // ID取得
+    public Optional<Account> getAccountById(Long id) {
+        return accountRepository.findById(id);
     }
 
     // 削除
@@ -49,64 +40,52 @@ public class AccountService {
         accountRepository.deleteById(id);
     }
 
-    // 収支タイプで絞り込み
-    public List<Account> getAccountsByType(String type) {
-        return accountRepository.findByType(type);
+    // 所有者チェック付きの削除処理
+    public void deleteAccountByUser(Long id, AppUser user) {
+        Optional<Account> optionalAccount = accountRepository.findById(id);
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            if (account.getUser().getId().equals(user.getId())) {
+                accountRepository.delete(account);
+            }
+        }
     }
 
-    // カテゴリで絞り込み
-    public List<Account> getAccountsByCategory(String category) {
-        return accountRepository.findByCategory(category);
+    // 月別合計（収入 or 支出）
+    public int getMonthlyTotal(AppUser user, String type, int year, int month) {
+        List<Account> filtered = accountRepository.findByUserAndTypeAndMonth(user.getId(), type, year, month);
+        return filtered.stream().mapToInt(Account::getAmount).sum();
     }
 
-    //Serviceに集計メソッドを追加
-    public int getMonthlyTotal(String type, int year, int month){
-    LocalDate start = LocalDate.of(year, month, 1);
-    LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-    List<Account> filtered = accountRepository.findByTypeAndDateBetween(type, start, end);
-    return filtered.stream()
-        .mapToInt(Account::getAmount)
-        .sum();
-}
-
-    //カテゴリ別集計メソッドを追加
-    public Map<String, Integer> getCategoryTotals(int year, int month) {
-    LocalDate start = LocalDate.of(year, month, 1);
-    LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-
-    List<Account> accounts = accountRepository.findByTypeAndDateBetween("expense", start, end);
-
-    return accounts.stream()
-        .collect(Collectors.groupingBy(
-            Account::getCategory,
-            Collectors.summingInt(Account::getAmount)
-        ));
-}
-    //収入カテゴリ集計メソッドを追加
-    public Map<String, Integer> getIncomeCategoryTotals(int year, int month) {
-    LocalDate start = LocalDate.of(year, month, 1);
-    LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-
-    List<Account> accounts = accountRepository.findByTypeAndDateBetween("income", start, end);
-    Map<String, Integer> totals = new HashMap<>();
-    for (Account a : accounts) {
-        totals.merge(a.getCategory(), a.getAmount(), Integer::sum);
+    // 支出カテゴリ別集計
+    public Map<String, Integer> getCategoryTotals(AppUser user, int year, int month) {
+        List<Account> accounts = accountRepository.findByUserAndTypeAndMonth(user.getId(), "expense", year, month);
+        return accounts.stream()
+                .collect(Collectors.groupingBy(
+                        Account::getCategory,
+                        Collectors.summingInt(Account::getAmount)
+                ));
     }
-    return totals;
-}
-    //月別集計メソッドを追加
-    public Map<Integer, Integer> getMonthlyTotals(String type, int year) {
-    Map<Integer, Integer> totals = new LinkedHashMap<>();
-    for (int month = 1; month <= 12; month++) {
-        LocalDate start = LocalDate.of(year, month, 1);
-        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-        List<Account> accounts = accountRepository.findByTypeAndDateBetween(type, start, end);
-        int total = accounts.stream().mapToInt(Account::getAmount).sum();
-        totals.put(month, total);
+
+    // 収入カテゴリ別集計
+    public Map<String, Integer> getIncomeCategoryTotals(AppUser user, int year, int month) {
+        List<Account> accounts = accountRepository.findByUserAndTypeAndMonth(user.getId(), "income", year, month);
+        Map<String, Integer> totals = new HashMap<>();
+        for (Account a : accounts) {
+            totals.merge(a.getCategory(), a.getAmount(), Integer::sum);
+        }
+        return totals;
     }
-    return totals;
-}
-}
 
-
-    
+    // 月別推移グラフ用集計
+    public Map<Integer, Integer> getMonthlyTotals(AppUser user, String type, int year) {
+        List<Object[]> results = accountRepository.getMonthlyTotalsByUser(user.getId(), type, year);
+        Map<Integer, Integer> totals = new LinkedHashMap<>();
+        for (Object[] row : results) {
+            Integer month = ((Number) row[0]).intValue();
+            Integer sum = ((Number) row[1]).intValue();
+            totals.put(month, sum);
+        }
+        return totals;
+    }
+}
