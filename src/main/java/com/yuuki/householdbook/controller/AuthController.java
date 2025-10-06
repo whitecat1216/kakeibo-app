@@ -16,11 +16,13 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
+    // ログイン画面表示
     @GetMapping("/login")
     public String showLoginForm() {
         return "login";
     }
 
+    // ログイン処理
     @PostMapping("/login")
     public String login(@RequestParam String username,
                         @RequestParam String password,
@@ -29,7 +31,7 @@ public class AuthController {
 
         AppUser user = userRepository.findByUsername(username);
         if (user != null && BCrypt.checkpw(password, user.getPassword())) {
-            session.setAttribute("user", user);
+            session.setAttribute("loginUser", user); // ← ここを "loginUser" に変更！
             return "redirect:/accounts";
         }
 
@@ -37,17 +39,20 @@ public class AuthController {
         return "login";
     }
 
+    // ログアウト処理
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";
     }
 
+    // 登録画面表示
     @GetMapping("/users/register")
     public String showRegisterForm() {
         return "users/register";
     }
 
+    // ユーザー登録処理
     @PostMapping("/users/register")
     public String register(@RequestParam String username,
                            @RequestParam String password,

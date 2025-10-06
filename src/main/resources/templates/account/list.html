@@ -116,6 +116,10 @@
   <a th:href="@{'/accounts/export?year=' + ${year} + '&month=' + ${month}}" class="btn btn-outline-secondary">
     この月のCSVをダウンロード
   </a>
+      </div>  
+    <!-- 管理者専用リンク -->
+<div th:if="${session.loginUser != null and session.loginUser.role == 'ADMIN'}" class="mb-3 text-end">
+  <a href="/admin/users" class="btn btn-warning">ユーザー一覧（管理者）</a>
 </div>
 
   </div>
