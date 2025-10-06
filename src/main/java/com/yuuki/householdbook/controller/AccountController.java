@@ -34,7 +34,7 @@ public class AccountController {
                                HttpSession session,
                                Model model) {
 
-        AppUser user = (AppUser) session.getAttribute("user");
+        AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) return "redirect:/login";
 
         LocalDate now = LocalDate.now();
@@ -63,7 +63,7 @@ public class AccountController {
     // 登録フォーム表示
     @GetMapping("/new")
     public String showForm(HttpSession session, Model model) {
-        AppUser user = (AppUser) session.getAttribute("user");
+        AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) return "redirect:/login";
 
         Account account = new Account();
@@ -75,7 +75,7 @@ public class AccountController {
     // 登録処理
     @PostMapping("/save")
     public String saveAccount(@ModelAttribute Account account, HttpSession session) {
-        AppUser user = (AppUser) session.getAttribute("user");
+        AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) return "redirect:/login";
 
         account.setUser(user);
@@ -86,7 +86,7 @@ public class AccountController {
     // 削除処理
     @GetMapping("/delete/{id}")
     public String deleteAccount(@PathVariable Long id, HttpSession session) {
-        AppUser user = (AppUser) session.getAttribute("user");
+        AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) return "redirect:/login";
 
         accountService.deleteAccountByUser(id, user);
@@ -100,7 +100,7 @@ public class AccountController {
                           HttpSession session,
                           HttpServletResponse response) throws IOException {
 
-        AppUser user = (AppUser) session.getAttribute("user");
+        AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) {
             response.sendRedirect("/login");
             return;
