@@ -14,7 +14,8 @@
         <th>ID</th>
         <th>ユーザー名</th>
         <th>権限</th>
-        <th>家計簿</th> <!-- ← 追加 -->
+        <th>家計簿</th>
+        <th>操作</th> <!-- 昇格ボタン -->
       </tr>
     </thead>
     <tbody>
@@ -26,6 +27,13 @@
           <a th:href="@{/admin/accounts(userId=${user.id})}" class="btn btn-sm btn-primary">
             家計簿を見る
           </a>
+        </td>
+        <td>
+          <form th:action="@{/admin/promote}" method="post" th:if="${user.role != 'ADMIN'}">
+            <input type="hidden" name="userId" th:value="${user.id}" />
+            <button type="submit" class="btn btn-sm btn-warning">管理者に昇格</button>
+          </form>
+          <span th:if="${user.role == 'ADMIN'}" class="text-success">管理者</span>
         </td>
       </tr>
     </tbody>
