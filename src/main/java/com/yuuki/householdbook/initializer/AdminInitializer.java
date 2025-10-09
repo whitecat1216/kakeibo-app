@@ -20,6 +20,7 @@ public class AdminInitializer implements CommandLineRunner {
             admin.setUsername("admin");
             admin.setPassword(BCrypt.hashpw("adminpass", BCrypt.gensalt()));
             admin.setRole("ADMIN");
+            admin.setEmail("admin@example.com"); // ✅ 追加
             userRepository.save(admin);
             System.out.println("✅ 初期管理者 admin を登録しました");
         }
