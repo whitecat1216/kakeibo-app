@@ -15,8 +15,8 @@
 
             <form th:action="@{/login}" method="post">
               <div class="mb-3">
-                <label for="username" class="form-label">ユーザー名</label>
-                <input type="text" id="username" name="username" class="form-control" required>
+                <label for="identifier" class="form-label">ユーザー名またはメールアドレス</label>
+                <input type="text" id="identifier" name="identifier" class="form-control" required>
               </div>
 
               <div class="mb-3">
@@ -27,8 +27,8 @@
               <button type="submit" class="btn btn-primary w-100">ログイン</button>
             </form>
 
-            <div th:if="${param.error}" class="alert alert-danger mt-3">
-              ログインに失敗しました。ユーザー名またはパスワードが正しくありません。
+            <div th:if="${error}" class="alert alert-danger mt-3">
+              <p th:text="${error}"></p>
             </div>
 
             <div th:if="${param.registered}" class="alert alert-success mt-3">

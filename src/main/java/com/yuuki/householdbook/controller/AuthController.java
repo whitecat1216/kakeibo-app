@@ -22,22 +22,30 @@ public class AuthController {
         return "login";
     }
 
-    // ログイン処理
-    @PostMapping("/login")
-    public String login(@RequestParam String username,
-                        @RequestParam String password,
-                        HttpSession session,
-                        Model model) {
+    // ログイン処理（メールアドレス認証）
+   @PostMapping("/login")
+public String login(@RequestParam String identifier,
+                    @RequestParam String password,
+                    HttpSession session,
+                    Model model) {
 
-        AppUser user = userRepository.findByUsername(username);
-        if (user != null && BCrypt.checkpw(password, user.getPassword())) {
-            session.setAttribute("loginUser", user); // ← ここを "loginUser" に変更！
-            return "redirect:/accounts";
-        }
+    AppUser user = null;
 
-        model.addAttribute("error", "ログインに失敗しました");
-        return "login";
+    // メールアドレス形式なら email で検索、それ以外は username で検索
+    if (identifier.contains("@")) {
+        user = userRepository.findByEmail(identifier);
+    } else {
+        user = userRepository.findByUsername(identifier);
     }
+
+    if (user != null && BCrypt.checkpw(password, user.getPassword())) {
+        session.setAttribute("loginUser", user);
+        return "redirect:/accounts";
+    }
+
+    model.addAttribute("error", "ログインに失敗しました");
+    return "login";
+}
 
     // ログアウト処理
     @GetMapping("/logout")
@@ -52,22 +60,30 @@ public class AuthController {
         return "users/register";
     }
 
-    // ユーザー登録処理
+    // ユーザー登録処理（メールアドレス付き）
     @PostMapping("/users/register")
     public String register(@RequestParam String username,
+                           @RequestParam String email,
                            @RequestParam String password,
                            Model model) {
 
-        if (userRepository.findByUsername(username) != null) {
+        if (userRepository.existsByUsername(username)) {
             model.addAttribute("error", "ユーザー名は既に使用されています");
+            return "users/register";
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            model.addAttribute("error", "メールアドレスは既に使用されています");
             return "users/register";
         }
 
         AppUser user = new AppUser();
         user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+        user.setRole("USER"); // 初期ロール
         userRepository.save(user);
 
-        return "redirect:/login";
+        return "redirect:/login?registered";
     }
 }

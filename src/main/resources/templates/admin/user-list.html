@@ -2,24 +2,41 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>ユーザー一覧</title>
+  <title>登録ユーザー一覧</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container mt-5">
-  <h2>登録ユーザー一覧</h2>
-  <table class="table table-bordered">
-    <thead>
+  <h2 class="mb-4">登録ユーザー一覧</h2>
+
+  <table class="table table-bordered table-hover">
+    <thead class="table-light">
       <tr>
         <th>ID</th>
         <th>ユーザー名</th>
+        <th>メールアドレス</th> <!-- 追加 -->
         <th>権限</th>
+        <th>家計簿</th>
+        <th>操作</th>
       </tr>
     </thead>
     <tbody>
       <tr th:each="user : ${users}">
         <td th:text="${user.id}"></td>
         <td th:text="${user.username}"></td>
+        <td th:text="${user.email}"></td> <!-- 追加 -->
         <td th:text="${user.role}"></td>
+        <td>
+          <a th:href="@{/admin/accounts(userId=${user.id})}" class="btn btn-sm btn-primary">
+            家計簿を見る
+          </a>
+        </td>
+        <td>
+          <form th:action="@{/admin/promote}" method="post" th:if="${user.role != 'ADMIN'}">
+            <input type="hidden" name="userId" th:value="${user.id}" />
+            <button type="submit" class="btn btn-sm btn-warning">管理者に昇格</button>
+          </form>
+          <span th:if="${user.role == 'ADMIN'}" class="text-success">管理者</span>
+        </td>
       </tr>
     </tbody>
   </table>

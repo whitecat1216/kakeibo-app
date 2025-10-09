@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface UserRepository extends JpaRepository<AppUser, Long> {
     AppUser findByUsername(String username);
     boolean  existsByUsername(String username); // ユーザー名の重複チェック
+    AppUser findByEmail(String email);
+    boolean existsByEmail(String email);//メールアドレスの重複チェック
 }
