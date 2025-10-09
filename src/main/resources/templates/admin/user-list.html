@@ -13,15 +13,17 @@
       <tr>
         <th>ID</th>
         <th>ユーザー名</th>
+        <th>メールアドレス</th> <!-- 追加 -->
         <th>権限</th>
         <th>家計簿</th>
-        <th>操作</th> <!-- 昇格ボタン -->
+        <th>操作</th>
       </tr>
     </thead>
     <tbody>
       <tr th:each="user : ${users}">
         <td th:text="${user.id}"></td>
         <td th:text="${user.username}"></td>
+        <td th:text="${user.email}"></td> <!-- 追加 -->
         <td th:text="${user.role}"></td>
         <td>
           <a th:href="@{/admin/accounts(userId=${user.id})}" class="btn btn-sm btn-primary">
