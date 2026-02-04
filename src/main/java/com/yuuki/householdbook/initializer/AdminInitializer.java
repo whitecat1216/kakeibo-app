@@ -2,27 +2,40 @@ package com.yuuki.householdbook.initializer;
 
 import com.yuuki.householdbook.entity.AppUser;
 import com.yuuki.householdbook.repository.UserRepository;
+import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.mindrot.jbcrypt.BCrypt;
 
 @Component
 public class AdminInitializer implements CommandLineRunner {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final String adminUsername;
+    private final String adminPassword;
+    private final String adminEmail;
+
+    public AdminInitializer(
+            UserRepository userRepository,
+            @Value("${admin.init.username:admin}") String adminUsername,
+            @Value("${admin.init.password:adminpass}") String adminPassword,
+            @Value("${admin.init.email:admin@example.com}") String adminEmail) {
+        this.userRepository = userRepository;
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
+        this.adminEmail = adminEmail;
+    }
 
     @Override
     public void run(String... args) {
-        if (userRepository.findByUsername("admin") == null) {
+        if (userRepository.findByUsername(adminUsername) == null) {
             AppUser admin = new AppUser();
-            admin.setUsername("admin");
-            admin.setPassword(BCrypt.hashpw("adminpass", BCrypt.gensalt()));
+            admin.setUsername(adminUsername);
+            admin.setPassword(BCrypt.hashpw(adminPassword, BCrypt.gensalt()));
             admin.setRole("ADMIN");
-            admin.setEmail("admin@example.com"); // ✅ 追加
+            admin.setEmail(adminEmail);
             userRepository.save(admin);
-            System.out.println("✅ 初期管理者 admin を登録しました");
+            System.out.println("✅ 初期管理者 " + adminUsername + " を登録しました");
         }
     }
 }
