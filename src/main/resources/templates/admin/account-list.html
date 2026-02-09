@@ -25,8 +25,8 @@
     <tbody>
       <tr th:each="a : ${accounts}">
         <td th:text="${a.date}"></td>
-        <td th:text="${a.type}"></td>
-        <td th:text="${a.category}"></td>
+        <td th:text="${a.type == 'income' ? '収入' : '支出'}"></td>
+        <td th:text="${a.category != null ? a.category.name : ''}"></td>
         <td th:text="${a.item}"></td>
         <td th:text="${a.amount}" class="text-end"></td>
         <td th:text="${a.memo}"></td>

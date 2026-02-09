@@ -62,7 +62,7 @@ public class AccountService {
         List<Account> accounts = accountRepository.findByUserAndTypeAndMonth(user.getId(), "expense", year, month);
         return accounts.stream()
                 .collect(Collectors.groupingBy(
-                        Account::getCategory,
+                        a -> a.getCategory() != null ? a.getCategory().getName() : "未設定",
                         Collectors.summingInt(Account::getAmount)
                 ));
     }
@@ -72,7 +72,8 @@ public class AccountService {
         List<Account> accounts = accountRepository.findByUserAndTypeAndMonth(user.getId(), "income", year, month);
         Map<String, Integer> totals = new HashMap<>();
         for (Account a : accounts) {
-            totals.merge(a.getCategory(), a.getAmount(), Integer::sum);
+            String key = a.getCategory() != null ? a.getCategory().getName() : "未設定";
+            totals.merge(key, a.getAmount(), Integer::sum);
         }
         return totals;
     }
@@ -87,5 +88,17 @@ public class AccountService {
             totals.put(month, sum);
         }
         return totals;
+    }
+
+    // 検索・期間フィルタ
+    public List<Account> search(AppUser user,
+                                String type,
+                                java.time.LocalDate startDate,
+                                java.time.LocalDate endDate,
+                                Long categoryId,
+                                Integer minAmount,
+                                Integer maxAmount,
+                                String memo) {
+        return accountRepository.search(user, type, startDate, endDate, categoryId, minAmount, maxAmount, memo);
     }
 }
