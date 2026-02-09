@@ -61,6 +61,7 @@ public class RecurringTransactionService {
             account.setDate(targetDate);
             account.setType(r.getType());
             account.setCategory(r.getCategory());
+            account.setSource(r.getSource());
             account.setItem(r.getItem());
             account.setAmount(r.getAmount());
             account.setMemo(r.getMemo());

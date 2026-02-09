@@ -66,13 +66,16 @@ document.addEventListener('DOMContentLoaded', function () {
   // 月別収支推移グラフ
   const monthlyIncome = window.monthlyIncome || {};
   const monthlyExpense = window.monthlyExpense || {};
+  const monthlyBalance = window.monthlyBalance || {};
 
   console.log("monthlyIncome:", monthlyIncome);
   console.log("monthlyExpense:", monthlyExpense);
 
-  const monthlyLabels = Object.keys(monthlyIncome).map(m => m + '月');
-  const monthlyIncomeValues = Object.values(monthlyIncome);   // ← 変数名変更
-  const monthlyExpenseValues = Object.values(monthlyExpense); // ← 変数名変更
+  const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
+  const monthlyLabels = months.map(m => m + '月');
+  const monthlyIncomeValues = months.map(m => monthlyIncome[m] ?? 0);
+  const monthlyExpenseValues = months.map(m => monthlyExpense[m] ?? 0);
+  const monthlyBalanceValues = months.map(m => monthlyBalance[m] ?? 0);
 
   const monthlyCtx = document.getElementById('monthlyChart');
   if (monthlyCtx && monthlyLabels.length > 0) {
@@ -93,6 +96,13 @@ document.addEventListener('DOMContentLoaded', function () {
             data: monthlyExpenseValues,
             borderColor: '#f44336',
             backgroundColor: 'rgba(244, 67, 54, 0.2)',
+            fill: false
+          },
+          {
+            label: '残高',
+            data: monthlyBalanceValues,
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.15)',
             fill: false
           }
         ]

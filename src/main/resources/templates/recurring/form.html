@@ -34,6 +34,14 @@
                   th:selected="${recurring.category != null and c.id == recurring.category.id}"></option>
         </select>
       </div>
+      <div class="col-md-4">
+        <label class="form-label">支払方法</label>
+        <select name="sourceId" class="form-select">
+          <option value="" th:selected="${recurring.source == null}">指定なし</option>
+          <option th:each="s : ${sources}" th:value="${s.id}" th:text="${s.name}"
+                  th:selected="${recurring.source != null and s.id == recurring.source.id}"></option>
+        </select>
+      </div>
       <div class="col-md-5">
         <label class="form-label">項目</label>
         <input type="text" th:field="*{item}" class="form-control">

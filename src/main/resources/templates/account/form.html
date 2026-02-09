@@ -40,6 +40,7 @@
             <button type="button" class="chip"
                     th:each="c,iter : ${categories}"
                     th:if="${iter.index < 6}"
+                    th:classappend="${c.type == 'income' ? ' chip-income' : (c.type == 'expense' ? ' chip-expense' : ' chip-both')}"
                     th:attr="data-category-id=${c.id}"
                     th:text="${c.name}"></button>
           </div>
@@ -50,6 +51,15 @@
                   th:selected="${account.category != null and c.id == account.category.id}"></option>
         </select>
         <div class="hint mt-1">カテゴリが足りない場合は「カテゴリ管理」から追加できます。</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">支払方法</label>
+        <select name="sourceId" class="form-select">
+          <option value="" th:selected="${account.source == null}">指定なし</option>
+          <option th:each="s : ${sources}" th:value="${s.id}" th:text="${s.name}"
+                  th:selected="${account.source != null and s.id == account.source.id}"></option>
+        </select>
+        <div class="hint mt-1">口座・財布・カードなどの残高推移に使います。</div>
       </div>
 
       <div class="col-12">

@@ -96,9 +96,26 @@ public class AccountService {
                                 java.time.LocalDate startDate,
                                 java.time.LocalDate endDate,
                                 Long categoryId,
+                                Long sourceId,
                                 Integer minAmount,
                                 Integer maxAmount,
                                 String memo) {
-        return accountRepository.search(user, type, startDate, endDate, categoryId, minAmount, maxAmount, memo);
+        return accountRepository.search(user, type, startDate, endDate, categoryId, sourceId, minAmount, maxAmount, memo);
+    }
+
+    public Map<Integer, Integer> getMonthlyNetTotals(AppUser user, int year) {
+        List<Object[]> results = accountRepository.getMonthlyNetTotalsByUser(user.getId(), year);
+        Map<Integer, Integer> totals = new LinkedHashMap<>();
+        for (Object[] row : results) {
+            Integer month = ((Number) row[0]).intValue();
+            Integer sum = ((Number) row[1]).intValue();
+            totals.put(month, sum);
+        }
+        return totals;
+    }
+
+    public Integer getNetTotalBySource(AppUser user, Long sourceId) {
+        Integer value = accountRepository.getNetTotalBySource(user.getId(), sourceId);
+        return value == null ? 0 : value;
     }
 }

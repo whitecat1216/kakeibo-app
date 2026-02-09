@@ -31,6 +31,10 @@ public class Account {
     private Long recurringId;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_id")
+    private PaymentSource source;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private AppUser user;
 
@@ -61,6 +65,9 @@ public class Account {
 
     public Long getRecurringId() { return recurringId; }
     public void setRecurringId(Long recurringId) { this.recurringId = recurringId; }
+
+    public PaymentSource getSource() { return source; }
+    public void setSource(PaymentSource source) { this.source = source; }
 
     public AppUser getUser() { return user; }
     public void setUser(AppUser user) { this.user = user; }

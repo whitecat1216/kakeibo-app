@@ -2,8 +2,10 @@ package com.yuuki.householdbook.controller;
 
 import com.yuuki.householdbook.entity.AppUser;
 import com.yuuki.householdbook.entity.Category;
+import com.yuuki.householdbook.entity.PaymentSource;
 import com.yuuki.householdbook.entity.RecurringTransaction;
 import com.yuuki.householdbook.service.CategoryService;
+import com.yuuki.householdbook.service.PaymentSourceService;
 import com.yuuki.householdbook.service.RecurringTransactionService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -18,11 +20,14 @@ public class RecurringTransactionController {
 
     private final RecurringTransactionService recurringService;
     private final CategoryService categoryService;
+    private final PaymentSourceService paymentSourceService;
 
     public RecurringTransactionController(RecurringTransactionService recurringService,
-                                          CategoryService categoryService) {
+                                          CategoryService categoryService,
+                                          PaymentSourceService paymentSourceService) {
         this.recurringService = recurringService;
         this.categoryService = categoryService;
+        this.paymentSourceService = paymentSourceService;
     }
 
     @GetMapping
@@ -41,7 +46,9 @@ public class RecurringTransactionController {
         if (user == null) return "redirect:/login";
 
         List<Category> categories = categoryService.list(user);
+        List<PaymentSource> sources = paymentSourceService.list(user);
         model.addAttribute("categories", categories);
+        model.addAttribute("sources", sources);
         model.addAttribute("recurring", new RecurringTransaction());
         return "recurring/form";
     }
@@ -49,6 +56,7 @@ public class RecurringTransactionController {
     @PostMapping("/save")
     public String save(@ModelAttribute RecurringTransaction recurring,
                        @RequestParam Long categoryId,
+                       @RequestParam(required = false) Long sourceId,
                        HttpSession session) {
         AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) return "redirect:/login";
@@ -58,8 +66,17 @@ public class RecurringTransactionController {
             return "redirect:/recurring";
         }
 
+        PaymentSource source = null;
+        if (sourceId != null) {
+            source = paymentSourceService.findById(sourceId).orElse(null);
+            if (source == null || !source.getUser().getId().equals(user.getId())) {
+                return "redirect:/recurring";
+            }
+        }
+
         recurring.setUser(user);
         recurring.setCategory(category);
+        recurring.setSource(source);
         recurringService.save(recurring);
         return "redirect:/recurring";
     }
@@ -75,7 +92,9 @@ public class RecurringTransactionController {
         }
 
         List<Category> categories = categoryService.list(user);
+        List<PaymentSource> sources = paymentSourceService.list(user);
         model.addAttribute("categories", categories);
+        model.addAttribute("sources", sources);
         model.addAttribute("recurring", recurring);
         return "recurring/form";
     }
@@ -83,6 +102,7 @@ public class RecurringTransactionController {
     @PostMapping("/update")
     public String update(@ModelAttribute RecurringTransaction recurring,
                          @RequestParam Long categoryId,
+                         @RequestParam(required = false) Long sourceId,
                          HttpSession session) {
         AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) return "redirect:/login";
@@ -97,8 +117,17 @@ public class RecurringTransactionController {
             return "redirect:/recurring";
         }
 
+        PaymentSource source = null;
+        if (sourceId != null) {
+            source = paymentSourceService.findById(sourceId).orElse(null);
+            if (source == null || !source.getUser().getId().equals(user.getId())) {
+                return "redirect:/recurring";
+            }
+        }
+
         existing.setType(recurring.getType());
         existing.setCategory(category);
+        existing.setSource(source);
         existing.setItem(recurring.getItem());
         existing.setAmount(recurring.getAmount());
         existing.setMemo(recurring.getMemo());

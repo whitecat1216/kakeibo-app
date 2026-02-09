@@ -3,9 +3,11 @@ package com.yuuki.householdbook.controller;
 import com.yuuki.householdbook.entity.Account;
 import com.yuuki.householdbook.entity.AppUser;
 import com.yuuki.householdbook.entity.Category;
+import com.yuuki.householdbook.entity.PaymentSource;
 import com.yuuki.householdbook.repository.UserRepository;
 import com.yuuki.householdbook.service.AccountService;
 import com.yuuki.householdbook.service.CategoryService;
+import com.yuuki.householdbook.service.PaymentSourceService;
 import com.yuuki.householdbook.service.RecurringTransactionService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,6 +39,9 @@ public class AccountController {
     @Autowired
     private RecurringTransactionService recurringService;
 
+    @Autowired
+    private PaymentSourceService paymentSourceService;
+
     // 家計簿一覧表示
     @GetMapping
     public String listAccounts(@RequestParam(required = false) Integer year,
@@ -45,6 +50,7 @@ public class AccountController {
                                @RequestParam(required = false) LocalDate startDate,
                                @RequestParam(required = false) LocalDate endDate,
                                @RequestParam(required = false) Long categoryId,
+                               @RequestParam(required = false) Long sourceId,
                                @RequestParam(required = false) Integer minAmount,
                                @RequestParam(required = false) Integer maxAmount,
                                @RequestParam(required = false) String memo,
@@ -72,6 +78,7 @@ public class AccountController {
                 startDate,
                 endDate,
                 categoryId,
+                sourceId,
                 minAmount,
                 maxAmount,
                 memo
@@ -81,6 +88,24 @@ public class AccountController {
         int balance = income - expense;
 
         List<Category> categories = categoryService.list(user);
+        List<PaymentSource> sources = paymentSourceService.list(user);
+
+        java.util.Map<Long, Integer> sourceBalances = new java.util.LinkedHashMap<>();
+        int totalInitial = 0;
+        for (PaymentSource s : sources) {
+            int net = accountService.getNetTotalBySource(user, s.getId());
+            int current = s.getInitialBalance() + net;
+            sourceBalances.put(s.getId(), current);
+            totalInitial += s.getInitialBalance();
+        }
+
+        java.util.Map<Integer, Integer> monthlyNet = accountService.getMonthlyNetTotals(user, year);
+        java.util.Map<Integer, Integer> monthlyBalance = new java.util.LinkedHashMap<>();
+        int running = totalInitial;
+        for (int m = 1; m <= 12; m++) {
+            running += monthlyNet.getOrDefault(m, 0);
+            monthlyBalance.put(m, running);
+        }
         model.addAttribute("accounts", accounts);
         model.addAttribute("income", income);
         model.addAttribute("expense", expense);
@@ -91,14 +116,18 @@ public class AccountController {
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
         model.addAttribute("categoryId", categoryId);
+        model.addAttribute("sourceId", sourceId);
         model.addAttribute("minAmount", minAmount);
         model.addAttribute("maxAmount", maxAmount);
         model.addAttribute("memo", memo);
         model.addAttribute("categories", categories);
+        model.addAttribute("sources", sources);
+        model.addAttribute("sourceBalances", sourceBalances);
         model.addAttribute("categoryTotals", accountService.getCategoryTotals(user, year, month));
         model.addAttribute("incomeCategoryTotals", accountService.getIncomeCategoryTotals(user, year, month));
         model.addAttribute("monthlyIncome", accountService.getMonthlyTotals(user, "income", year));
         model.addAttribute("monthlyExpense", accountService.getMonthlyTotals(user, "expense", year));
+        model.addAttribute("monthlyBalance", monthlyBalance);
 
         return "account/list";
     }
@@ -113,6 +142,7 @@ public class AccountController {
         account.setDate(LocalDate.now());
         model.addAttribute("account", account);
         model.addAttribute("categories", categoryService.list(user));
+        model.addAttribute("sources", paymentSourceService.list(user));
         return "account/form";
     }
 
@@ -120,6 +150,7 @@ public class AccountController {
     @PostMapping("/save")
     public String saveAccount(@ModelAttribute Account account,
                               @RequestParam Long categoryId,
+                              @RequestParam(required = false) Long sourceId,
                               HttpSession session) {
         AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) return "redirect:/login";
@@ -129,8 +160,17 @@ public class AccountController {
             return "redirect:/accounts";
         }
 
+        PaymentSource source = null;
+        if (sourceId != null) {
+            source = paymentSourceService.findById(sourceId).orElse(null);
+            if (source == null || !source.getUser().getId().equals(user.getId())) {
+                return "redirect:/accounts";
+            }
+        }
+
         account.setUser(user);
         account.setCategory(category);
+        account.setSource(source);
         accountService.saveAccount(account);
         return "redirect:/accounts";
     }
@@ -148,6 +188,7 @@ public class AccountController {
 
         model.addAttribute("account", account);
         model.addAttribute("categories", categoryService.list(user));
+        model.addAttribute("sources", paymentSourceService.list(user));
         return "account/form";
     }
 
@@ -155,6 +196,7 @@ public class AccountController {
     @PostMapping("/update")
     public String updateAccount(@ModelAttribute Account account,
                                 @RequestParam Long categoryId,
+                                @RequestParam(required = false) Long sourceId,
                                 HttpSession session) {
         AppUser user = (AppUser) session.getAttribute("loginUser");
         if (user == null) return "redirect:/login";
@@ -169,9 +211,18 @@ public class AccountController {
             return "redirect:/accounts";
         }
 
+        PaymentSource source = null;
+        if (sourceId != null) {
+            source = paymentSourceService.findById(sourceId).orElse(null);
+            if (source == null || !source.getUser().getId().equals(user.getId())) {
+                return "redirect:/accounts";
+            }
+        }
+
         existing.setDate(account.getDate());
         existing.setType(account.getType());
         existing.setCategory(category);
+        existing.setSource(source);
         existing.setItem(account.getItem());
         existing.setAmount(account.getAmount());
         existing.setMemo(account.getMemo());
@@ -195,6 +246,7 @@ public class AccountController {
         copy.setDate(LocalDate.now());
         copy.setType(existing.getType());
         copy.setCategory(existing.getCategory());
+        copy.setSource(existing.getSource());
         copy.setItem(existing.getItem());
         copy.setAmount(existing.getAmount());
         copy.setMemo(existing.getMemo());
@@ -252,11 +304,12 @@ public class AccountController {
 
         try (PrintWriter writer = response.getWriter()) {
             writer.write('\uFEFF'); // Excel対応のBOM
-            writer.println("日付,タイプ,カテゴリ,項目,金額,メモ");
+            writer.println("日付,タイプ,カテゴリ,支払方法,項目,金額,メモ");
             for (Account a : accounts) {
                 String categoryName = a.getCategory() != null ? a.getCategory().getName() : "";
-                writer.printf("%s,%s,%s,%s,%d,%s%n",
-                        a.getDate(), a.getType(), categoryName, a.getItem(), a.getAmount(), a.getMemo());
+                String sourceName = a.getSource() != null ? a.getSource().getName() : "";
+                writer.printf("%s,%s,%s,%s,%s,%d,%s%n",
+                        a.getDate(), a.getType(), categoryName, sourceName, a.getItem(), a.getAmount(), a.getMemo());
             }
         }
     }

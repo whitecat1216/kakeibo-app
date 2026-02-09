@@ -79,9 +79,25 @@ body {
   padding: 12px;
 }
 
+.mini-guide .step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.mini-guide .step-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #eef2ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .mini-guide .step-title {
   font-weight: 700;
-  margin-bottom: 6px;
 }
 
 .chip {
@@ -100,6 +116,24 @@ body {
   border-color: var(--accent);
   background: #eff6ff;
   color: var(--accent);
+}
+
+.chip.chip-income {
+  border-color: #34d399;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.chip.chip-expense {
+  border-color: #f87171;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.chip.chip-both {
+  border-color: #a78bfa;
+  background: #f5f3ff;
+  color: #5b21b6;
 }
 
 .chart-note {

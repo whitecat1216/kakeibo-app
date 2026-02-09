@@ -24,15 +24,28 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query(value = "SELECT EXTRACT(MONTH FROM date) AS month, SUM(amount) FROM account WHERE user_id = :userId AND type = :type AND EXTRACT(YEAR FROM date) = :year GROUP BY EXTRACT(MONTH FROM date)", nativeQuery = true)
     List<Object[]> getMonthlyTotalsByUser(@Param("userId") Long userId, @Param("type") String type, @Param("year") int year);
 
+    @Query(value = "SELECT EXTRACT(MONTH FROM date) AS month, " +
+            "SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) " +
+            "FROM account WHERE user_id = :userId AND EXTRACT(YEAR FROM date) = :year " +
+            "GROUP BY EXTRACT(MONTH FROM date) ORDER BY month", nativeQuery = true)
+    List<Object[]> getMonthlyNetTotalsByUser(@Param("userId") Long userId, @Param("year") int year);
+
     boolean existsByUserAndRecurringIdAndDate(AppUser user, Long recurringId, LocalDate date);
 
     long countByUserAndCategory(AppUser user, com.yuuki.householdbook.entity.Category category);
+
+    long countByUserAndSource(AppUser user, com.yuuki.householdbook.entity.PaymentSource source);
+
+    @Query(value = "SELECT COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) " +
+            "FROM account WHERE user_id = :userId AND source_id = :sourceId", nativeQuery = true)
+    Integer getNetTotalBySource(@Param("userId") Long userId, @Param("sourceId") Long sourceId);
 
     @Query("SELECT a FROM Account a WHERE a.user = :user " +
             "AND (:type IS NULL OR a.type = :type) " +
             "AND (a.date >= COALESCE(:startDate, a.date)) " +
             "AND (a.date <= COALESCE(:endDate, a.date)) " +
-            "AND (:categoryId IS NULL OR a.category.id = :categoryId) " +
+            "AND (:categoryId IS NULL OR (a.category IS NOT NULL AND a.category.id = :categoryId)) " +
+            "AND (:sourceId IS NULL OR (a.source IS NOT NULL AND a.source.id = :sourceId)) " +
             "AND (:minAmount IS NULL OR a.amount >= :minAmount) " +
             "AND (:maxAmount IS NULL OR a.amount <= :maxAmount) " +
             "AND (:memo IS NULL OR :memo = '' OR LOWER(a.memo) LIKE LOWER(CONCAT('%', :memo, '%'))) " +
@@ -42,6 +55,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
                          @Param("startDate") LocalDate startDate,
                          @Param("endDate") LocalDate endDate,
                          @Param("categoryId") Long categoryId,
+                         @Param("sourceId") Long sourceId,
                          @Param("minAmount") Integer minAmount,
                          @Param("maxAmount") Integer maxAmount,
                          @Param("memo") String memo);

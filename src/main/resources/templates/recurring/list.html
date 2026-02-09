@@ -25,6 +25,7 @@
           <tr>
             <th>収支</th>
             <th>カテゴリ</th>
+            <th>支払方法</th>
             <th>項目</th>
             <th>金額</th>
             <th>日</th>
@@ -38,6 +39,7 @@
           <tr th:each="r : ${recurringList}">
             <td th:text="${r.type == 'income' ? '収入' : '支出'}"></td>
             <td th:text="${r.category != null ? r.category.name : ''}"></td>
+            <td th:text="${r.source != null ? r.source.name : ''}"></td>
             <td th:text="${r.item}"></td>
             <td th:text="${r.amount}"></td>
             <td th:text="${r.dayOfMonth} + '日'"></td>

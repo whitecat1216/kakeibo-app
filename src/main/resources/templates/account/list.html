@@ -25,15 +25,38 @@
 
     <div class="mini-guide mb-4">
       <div class="step">
-        <div class="step-title">1. 絞り込み</div>
+        <div class="step-header">
+          <div class="step-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M3 5h18M6 12h12M10 19h4" stroke="#4338ca" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="step-title">1. 絞り込み</div>
+        </div>
         <div class="hint">期間・カテゴリ・金額で必要な明細だけにします。</div>
       </div>
       <div class="step">
-        <div class="step-title">2. 一覧で確認</div>
+        <div class="step-header">
+          <div class="step-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M4 6h16v12H4z" stroke="#4338ca" stroke-width="2"/>
+              <path d="M7 10h10M7 14h6" stroke="#4338ca" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="step-title">2. 一覧で確認</div>
+        </div>
         <div class="hint">並びは日付の新しい順です。必要なら複製も使えます。</div>
       </div>
       <div class="step">
-        <div class="step-title">3. 操作</div>
+        <div class="step-header">
+          <div class="step-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M7 7h10v10H7z" stroke="#4338ca" stroke-width="2"/>
+              <path d="M9 9h6v6H9z" stroke="#4338ca" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="step-title">3. 操作</div>
+        </div>
         <div class="hint">編集・複製・削除、一括削除もできます。</div>
       </div>
     </div>
@@ -87,6 +110,14 @@
                     th:selected="${categoryId != null and c.id == categoryId}"></option>
           </select>
         </div>
+        <div class="col-md-3">
+          <label class="form-label">支払方法</label>
+          <select name="sourceId" class="form-select">
+            <option value="" th:selected="${sourceId == null}">指定なし</option>
+            <option th:each="s : ${sources}" th:value="${s.id}" th:text="${s.name}"
+                    th:selected="${sourceId != null and s.id == sourceId}"></option>
+          </select>
+        </div>
         <div class="col-md-2">
           <label class="form-label">金額（最小）</label>
           <input type="number" name="minAmount" class="form-control" th:value="${minAmount}">
@@ -119,6 +150,26 @@
         <li class="list-group-item">差額: <span th:text="${balance}+'円'"></span></li>
       </ul>
     </div>
+
+    <div class="card-elevated p-3 mb-4">
+      <div class="section-title mb-2">支払方法ごとの残高</div>
+      <div class="hint mb-3">初期残高 + 収支の合計で現在残高を計算しています。</div>
+      <div class="row g-2" th:if="${!#lists.isEmpty(sources)}">
+        <div class="col-md-3" th:each="s : ${sources}">
+          <div class="border rounded p-2">
+            <div class="fw-bold" th:text="${s.name}"></div>
+            <div class="hint" th:text="${s.type}"></div>
+            <div class="fs-6" th:text="${sourceBalances[s.id]} + '円'"></div>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state" th:if="${#lists.isEmpty(sources)}">
+        まだ支払方法がありません。「支払方法を管理」から追加してください。
+      </div>
+      <div class="mt-2">
+        <a href="/sources" class="btn btn-outline-dark btn-sm">支払方法を管理</a>
+      </div>
+    </div>
     
 
     <div class="d-md-none mb-2">
@@ -147,11 +198,11 @@
         </div>
       <!-- 月別推移グラフ -->
        <div class="text-center mb-3">
-    <h2 class="mb-3">月別収支推移グラフ</h2>
-    <div style="max-width: 100%; margin: 0 auto;">
-      <canvas id="monthlyChart"></canvas>
-    </div>
-    <div class="chart-note mt-2">月ごとの収入・支出の増減を把握できます。</div>
+  <h2 class="mb-3">月別収支推移グラフ</h2>
+  <div style="max-width: 100%; margin: 0 auto;">
+    <canvas id="monthlyChart"></canvas>
+  </div>
+  <div class="chart-note mt-2">月ごとの収入・支出・残高推移を把握できます。</div>
   </div>
     </div>
 
@@ -171,6 +222,7 @@
             <th>日付</th>
             <th>収支</th>
             <th>カテゴリ</th>
+            <th>支払方法</th>
             <th>項目</th>
             <th>金額</th>
             <th>メモ</th>
@@ -183,6 +235,7 @@
             <td th:text="${account.date}"></td>
             <td th:text="${account.type == 'income' ? '収入' : '支出'}"></td>
             <td th:text="${account.category != null ? account.category.name : ''}"></td>
+            <td th:text="${account.source != null ? account.source.name : ''}"></td>
             <td th:text="${account.item}"></td>
             <td th:text="${account.amount}"></td>
             <td th:text="${account.memo}"></td>
@@ -220,6 +273,7 @@
     window.incomeCategoryData = /*[[${incomeCategoryTotals}]]*/ {};
     window.monthlyIncome = /*[[${monthlyIncome}]]*/ {};
     window.monthlyExpense = /*[[${monthlyExpense}]]*/ {};
+    window.monthlyBalance = /*[[${monthlyBalance}]]*/ {};
 
     /*]]>*/
 

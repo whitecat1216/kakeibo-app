@@ -19,6 +19,10 @@ public class RecurringTransaction {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_id")
+    private PaymentSource source;
+
     private String item;
 
     @Column(nullable = false)
@@ -51,6 +55,9 @@ public class RecurringTransaction {
 
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
+
+    public PaymentSource getSource() { return source; }
+    public void setSource(PaymentSource source) { this.source = source; }
 
     public String getItem() { return item; }
     public void setItem(String item) { this.item = item; }

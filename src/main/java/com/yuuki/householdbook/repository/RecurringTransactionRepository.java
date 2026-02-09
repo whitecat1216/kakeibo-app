@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface RecurringTransactionRepository extends JpaRepository<RecurringTransaction, Long> {
     List<RecurringTransaction> findByUserOrderByIdDesc(AppUser user);
+
+    long countByUserAndCategory(AppUser user, com.yuuki.householdbook.entity.Category category);
 }

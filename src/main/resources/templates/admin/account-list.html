@@ -17,6 +17,7 @@
         <th>日付</th>
         <th>タイプ</th>
         <th>カテゴリ</th>
+        <th>支払方法</th>
         <th>項目</th>
         <th>金額</th>
         <th>メモ</th>
@@ -27,6 +28,7 @@
         <td th:text="${a.date}"></td>
         <td th:text="${a.type == 'income' ? '収入' : '支出'}"></td>
         <td th:text="${a.category != null ? a.category.name : ''}"></td>
+        <td th:text="${a.source != null ? a.source.name : ''}"></td>
         <td th:text="${a.item}"></td>
         <td th:text="${a.amount}" class="text-end"></td>
         <td th:text="${a.memo}"></td>

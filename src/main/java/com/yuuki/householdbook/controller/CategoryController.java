@@ -3,6 +3,7 @@ package com.yuuki.householdbook.controller;
 import com.yuuki.householdbook.entity.AppUser;
 import com.yuuki.householdbook.entity.Category;
 import com.yuuki.householdbook.repository.AccountRepository;
+import com.yuuki.householdbook.repository.RecurringTransactionRepository;
 import com.yuuki.householdbook.service.CategoryService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -17,10 +18,14 @@ public class CategoryController {
 
     private final CategoryService categoryService;
     private final AccountRepository accountRepository;
+    private final RecurringTransactionRepository recurringTransactionRepository;
 
-    public CategoryController(CategoryService categoryService, AccountRepository accountRepository) {
+    public CategoryController(CategoryService categoryService,
+                              AccountRepository accountRepository,
+                              RecurringTransactionRepository recurringTransactionRepository) {
         this.categoryService = categoryService;
         this.accountRepository = accountRepository;
+        this.recurringTransactionRepository = recurringTransactionRepository;
     }
 
     @GetMapping
@@ -87,8 +92,9 @@ public class CategoryController {
         }
 
         long usedCount = accountRepository.countByUserAndCategory(user, category);
-        if (usedCount > 0) {
-            model.addAttribute("deleteError", "このカテゴリは既に使われています。先に明細のカテゴリを変更してください。");
+        long recurringUsed = recurringTransactionRepository.countByUserAndCategory(user, category);
+        if (usedCount > 0 || recurringUsed > 0) {
+            model.addAttribute("deleteError", "このカテゴリは既に使われています。明細または定期収支のカテゴリを変更してください。");
             model.addAttribute("categories", categoryService.list(user));
             model.addAttribute("category", new Category());
             return "categories/list";
