@@ -20,9 +20,9 @@ public class AdminInitializer implements CommandLineRunner {
     public AdminInitializer(
             UserRepository userRepository,
             CategoryService categoryService,
-            @Value("${admin.init.username:admin}") String adminUsername,
-            @Value("${admin.init.password:adminpass}") String adminPassword,
-            @Value("${admin.init.email:admin@example.com}") String adminEmail) {
+            @Value("${admin.init.username}") String adminUsername,
+            @Value("${admin.init.password}") String adminPassword,
+            @Value("${admin.init.email}") String adminEmail) {
         this.userRepository = userRepository;
         this.categoryService = categoryService;
         this.adminUsername = adminUsername;
