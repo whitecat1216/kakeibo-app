@@ -32,4 +32,22 @@ public class PaymentSourceService {
     public void delete(PaymentSource source) {
         paymentSourceRepository.delete(source);
     }
+
+    public PaymentSource findByName(AppUser user, String name) {
+        if (name == null || name.isBlank()) return null;
+        return paymentSourceRepository.findByUserAndNameIgnoreCase(user, name.trim());
+    }
+
+    public PaymentSource findOrCreateByName(AppUser user, String name) {
+        if (name == null || name.isBlank()) return null;
+        PaymentSource existing = paymentSourceRepository.findByUserAndNameIgnoreCase(user, name.trim());
+        if (existing != null) return existing;
+
+        PaymentSource source = new PaymentSource();
+        source.setUser(user);
+        source.setName(name.trim());
+        source.setType("other");
+        source.setInitialBalance(0);
+        return paymentSourceRepository.save(source);
+    }
 }

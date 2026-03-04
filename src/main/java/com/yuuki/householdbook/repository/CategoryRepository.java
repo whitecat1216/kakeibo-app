@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findByUserOrderBySortOrderAscIdAsc(AppUser user);
+
+    Category findByUserAndNameIgnoreCase(AppUser user, String name);
 }

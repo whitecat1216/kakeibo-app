@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <th:block th:fragment="appLayout">
+    <header class="app-topbar d-flex align-items-center justify-content-between px-2 px-lg-3">
+      <button class="btn app-top-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar">
+        ☰
+      </button>
+        <div class="app-segmented" role="tablist" aria-label="view switch">
+          <a href="/accounts" class="seg-link" data-top-path="/accounts">ホーム</a>
+          <a href="/accounts/list" class="seg-link" data-top-path="/accounts/list">リスト</a>
+          <a href="/accounts/report" class="seg-link" data-top-path="/accounts/report">レポート</a>
+        </div>
+      <a class="btn app-top-btn" href="/accounts/new">＋</a>
+    </header>
+
+    <aside class="offcanvas offcanvas-start app-sidebar" tabindex="-1" id="appSidebar">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title">メニュー</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+      </div>
+      <div class="offcanvas-body p-0 d-flex flex-column">
+        <div class="app-sidebar-head">
+          <div class="fw-bold">Kakeibo</div>
+          <small class="text-muted">機能メニュー</small>
+        </div>
+        <nav class="nav flex-column app-nav px-2 pb-3">
+          <a class="nav-link" href="/accounts" data-path="/accounts">ダッシュボード</a>
+          <a class="nav-link" href="/accounts/list" data-path="/accounts/list">明細リスト</a>
+          <a class="nav-link" href="/accounts/report" data-path="/accounts/report">レポート</a>
+          <a class="nav-link" href="/accounts/yearly" data-path="/accounts/yearly">年間収支</a>
+          <a class="nav-link" href="/accounts/new" data-path="/accounts/new">収支登録</a>
+          <a class="nav-link" href="/accounts/import" data-path="/accounts/import">CSVインポート</a>
+          <a class="nav-link" href="/categories" data-path="/categories">カテゴリ管理</a>
+          <a class="nav-link" href="/sources" data-path="/sources">支払方法管理</a>
+          <a class="nav-link" href="/recurring" data-path="/recurring">定期収支</a>
+          <a class="nav-link" href="/admin/users" data-path="/admin/users">管理者メニュー</a>
+          <a class="nav-link" href="/logout" data-path="/logout">ログアウト</a>
+        </nav>
+      </div>
+    </aside>
+
+    <nav class="app-bottom-nav d-flex d-lg-none">
+      <a href="/accounts/new" class="bottom-item" data-bottom-path="/accounts/new">✎<span>記録</span></a>
+      <a href="/accounts/report" class="bottom-item" data-bottom-path="/accounts/report">◔<span>分析</span></a>
+      <a href="/accounts/yearly" class="bottom-item" data-bottom-path="/accounts/yearly">◍<span>年間</span></a>
+      <a href="/sources" class="bottom-item" data-bottom-path="/sources">◫<span>口座</span></a>
+      <a href="/categories" class="bottom-item" data-bottom-path="/categories">⚙<span>設定</span></a>
+    </nav>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const current = window.location.pathname;
+        const search = window.location.search || '';
+        const full = current + search;
+        document.querySelectorAll('.app-nav .nav-link').forEach((el) => {
+          const path = el.getAttribute('data-path');
+          if (!path) return;
+          if ((path === '/accounts' && current === '/accounts') || (path !== '/accounts' && current.startsWith(path))) {
+            el.classList.add('active');
+          }
+        });
+        document.querySelectorAll('.seg-link').forEach((el) => {
+          const path = el.getAttribute('data-top-path');
+          if (!path) return;
+          if (full === path || current === path) {
+            el.classList.add('active');
+          }
+        });
+        document.querySelectorAll('.bottom-item').forEach((el) => {
+          const path = el.getAttribute('data-bottom-path');
+          if (!path) return;
+          if ((path === '/accounts/new' && current.startsWith('/accounts/new')) ||
+              (path === '/categories' && current.startsWith('/categories')) ||
+              (path === '/sources' && current.startsWith('/sources')) ||
+              (path === '/accounts/import' && current.startsWith('/accounts/import')) ||
+              (path === '/accounts/report' && current.startsWith('/accounts/report')) ||
+              (path === '/accounts/yearly' && current.startsWith('/accounts/yearly'))) {
+            el.classList.add('active');
+          }
+        });
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </th:block>
+</body>
+</html>

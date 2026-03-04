@@ -40,6 +40,24 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             "FROM account WHERE user_id = :userId AND source_id = :sourceId", nativeQuery = true)
     Integer getNetTotalBySource(@Param("userId") Long userId, @Param("sourceId") Long sourceId);
 
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN TRUE ELSE FALSE END FROM Account a " +
+            "WHERE a.user = :user " +
+            "AND a.date = :date " +
+            "AND a.type = :type " +
+            "AND a.amount = :amount " +
+            "AND COALESCE(a.item, '') = COALESCE(:item, '') " +
+            "AND COALESCE(a.memo, '') = COALESCE(:memo, '') " +
+            "AND ((:categoryId IS NULL AND a.category IS NULL) OR (a.category IS NOT NULL AND a.category.id = :categoryId)) " +
+            "AND ((:sourceId IS NULL AND a.source IS NULL) OR (a.source IS NOT NULL AND a.source.id = :sourceId))")
+    boolean existsDuplicate(@Param("user") AppUser user,
+                            @Param("date") LocalDate date,
+                            @Param("type") String type,
+                            @Param("amount") Integer amount,
+                            @Param("item") String item,
+                            @Param("memo") String memo,
+                            @Param("categoryId") Long categoryId,
+                            @Param("sourceId") Long sourceId);
+
     @Query("SELECT a FROM Account a WHERE a.user = :user " +
             "AND (:type IS NULL OR a.type = :type) " +
             "AND (a.date >= COALESCE(:startDate, a.date)) " +

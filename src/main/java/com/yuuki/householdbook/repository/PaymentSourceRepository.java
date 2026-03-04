@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface PaymentSourceRepository extends JpaRepository<PaymentSource, Long> {
     List<PaymentSource> findByUserOrderByIdAsc(AppUser user);
+
+    PaymentSource findByUserAndNameIgnoreCase(AppUser user, String name);
 }

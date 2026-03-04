@@ -1,31 +1,54 @@
-console.log("categoryChart.js loaded");
-
 document.addEventListener('DOMContentLoaded', function () {
+  const yen = new Intl.NumberFormat('ja-JP');
+  const palette = [
+    '#F43F5E', '#0EA5E9', '#22C55E', '#F59E0B', '#8B5CF6',
+    '#14B8A6', '#EAB308', '#EC4899', '#6366F1', '#10B981'
+  ];
+
+  const tooltipCurrency = {
+    callbacks: {
+      label: (ctx) => `${ctx.label}: ${yen.format(ctx.raw)}円`
+    }
+  };
+
   // 支出カテゴリグラフ
   const categoryData = window.categoryData || {};
-  console.log("categoryData:", categoryData);
-  const expenseLabels = Object.keys(categoryData);
-  const expenseValues = Object.values(categoryData);
+  const expenseEntries = Object.entries(categoryData).sort((a, b) => b[1] - a[1]);
+  const expenseLabels = expenseEntries.map((e) => e[0]);
+  const expenseValues = expenseEntries.map((e) => e[1]);
 
   const expenseCtx = document.getElementById('categoryChart');
   if (expenseCtx && expenseLabels.length > 0) {
     new Chart(expenseCtx, {
-      type: 'pie',
+      type: 'bar',
       data: {
         labels: expenseLabels,
         datasets: [{
           label: 'カテゴリ別支出',
           data: expenseValues,
-          backgroundColor: [
-            '#FF6384', '#36A2EB', '#FFCE56', '#8BC34A', '#FF9800', '#9C27B0'
-          ],
-          borderWidth: 1
+          backgroundColor: expenseLabels.map((_, i) => palette[i % palette.length]),
+          borderRadius: 8,
+          barThickness: 20
         }]
       },
       options: {
+        indexAxis: 'y',
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom' }
+          legend: { display: false },
+          tooltip: tooltipCurrency
+        },
+        scales: {
+          x: {
+            ticks: {
+              callback: (value) => `${yen.format(value)}円`
+            },
+            grid: { color: '#E5E7EB' }
+          },
+          y: {
+            grid: { display: false }
+          }
         }
       }
     });
@@ -33,30 +56,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 収入カテゴリグラフ
   const incomeData = window.incomeCategoryData || {};
-  const incomeLabels = Object.keys(incomeData);
-  const incomeCategoryValues = Object.values(incomeData); // ← 変数名変更
+  const incomeEntries = Object.entries(incomeData).sort((a, b) => b[1] - a[1]);
+  const incomeLabels = incomeEntries.map((e) => e[0]);
+  const incomeCategoryValues = incomeEntries.map((e) => e[1]);
 
   const incomeCtx = document.getElementById('incomeChart');
   if (incomeCtx && incomeLabels.length > 0) {
     new Chart(incomeCtx, {
-      type: 'pie',
+      type: 'bar',
       data: {
         labels: incomeLabels,
         datasets: [{
+          label: 'カテゴリ別収入',
           data: incomeCategoryValues,
-          backgroundColor: [
-            '#4caf50', '#81c784', '#a5d6a7', '#c8e6c9',
-            '#66bb6a', '#388e3c', '#2e7d32', '#1b5e20'
-          ]
+          backgroundColor: incomeLabels.map((_, i) => palette[(i + 2) % palette.length]),
+          borderRadius: 8,
+          barThickness: 20
         }]
       },
       options: {
+        indexAxis: 'y',
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom' },
-          title: {
-            display: true,
-            text: 'カテゴリ別収入'
+          legend: { display: false },
+          tooltip: tooltipCurrency
+        },
+        scales: {
+          x: {
+            ticks: {
+              callback: (value) => `${yen.format(value)}円`
+            },
+            grid: { color: '#E5E7EB' }
+          },
+          y: {
+            grid: { display: false }
           }
         }
       }
@@ -67,9 +101,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const monthlyIncome = window.monthlyIncome || {};
   const monthlyExpense = window.monthlyExpense || {};
   const monthlyBalance = window.monthlyBalance || {};
-
-  console.log("monthlyIncome:", monthlyIncome);
-  console.log("monthlyExpense:", monthlyExpense);
 
   const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
   const monthlyLabels = months.map(m => m + '月');
@@ -87,38 +118,48 @@ document.addEventListener('DOMContentLoaded', function () {
           {
             label: '収入',
             data: monthlyIncomeValues,
-            borderColor: '#4caf50',
-            backgroundColor: 'rgba(76, 175, 80, 0.2)',
-            fill: false
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            fill: false,
+            tension: 0.35,
+            pointRadius: 3
           },
           {
             label: '支出',
             data: monthlyExpenseValues,
-            borderColor: '#f44336',
-            backgroundColor: 'rgba(244, 67, 54, 0.2)',
-            fill: false
+            borderColor: '#EF4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+            fill: false,
+            tension: 0.35,
+            pointRadius: 3
           },
           {
             label: '残高',
             data: monthlyBalanceValues,
             borderColor: '#2563eb',
             backgroundColor: 'rgba(37, 99, 235, 0.15)',
-            fill: false
+            fill: true,
+            tension: 0.35,
+            pointRadius: 2
           }
         ]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom' },
-          title: {
-            display: true,
-            text: '月別収支推移'
-          }
+          legend: { position: 'top' },
+          tooltip: tooltipCurrency
         },
         scales: {
           y: {
-            beginAtZero: true
+            ticks: {
+              callback: (value) => `${yen.format(value)}円`
+            },
+            grid: { color: '#E5E7EB' }
+          },
+          x: {
+            grid: { display: false }
           }
         }
       }

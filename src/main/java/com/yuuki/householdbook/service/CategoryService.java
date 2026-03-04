@@ -80,6 +80,30 @@ public class CategoryService {
         categoryRepository.saveAll(defaults);
     }
 
+    public Category findByName(AppUser user, String name) {
+        if (name == null || name.isBlank()) return null;
+        return categoryRepository.findByUserAndNameIgnoreCase(user, name.trim());
+    }
+
+    public Category findOrCreateByName(AppUser user, String name, String type) {
+        if (name == null || name.isBlank()) return null;
+        Category existing = categoryRepository.findByUserAndNameIgnoreCase(user, name.trim());
+        if (existing != null) return existing;
+
+        int nextSort = list(user).stream()
+                .map(Category::getSortOrder)
+                .max(Integer::compareTo)
+                .orElse(0) + 1;
+
+        Category category = new Category();
+        category.setUser(user);
+        category.setName(name.trim());
+        category.setColor("income".equals(type) ? "#2C73D2" : "#FF6B6B");
+        category.setSortOrder(nextSort);
+        category.setType(type);
+        return categoryRepository.save(category);
+    }
+
     private Category build(AppUser user, String name, String color, int sortOrder, String type) {
         Category c = new Category();
         c.setUser(user);

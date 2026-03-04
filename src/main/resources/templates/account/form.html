@@ -8,7 +8,12 @@
   <link href="/css/app.css" rel="stylesheet">
 </head>
 <body>
-  <div class="container mt-4">
+  <div th:replace="~{fragments/sidebar :: appLayout}"></div>
+  <div class="app-content container-fluid px-3 px-lg-4 py-3">
+    <div class="app-header">
+      <p class="app-header-title">Transaction Editor</p>
+      <p class="app-header-sub">日付、カテゴリ、支払方法を揃えて入力するとレポート精度が上がります。</p>
+    </div>
     <div class="mb-3">
       <div class="tag mb-2">入力</div>
       <h1 class="page-title mb-1">収支登録フォーム</h1>
