@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>ダッシュボード</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/app.css" rel="stylesheet">
+</head>
+<body>
+  <div th:replace="~{fragments/sidebar :: appLayout}"></div>
+  <div class="app-content container-fluid px-3 px-lg-4 py-3">
+    <div class="app-header">
+      <p class="app-header-title">ダッシュボード</p>
+      <p class="app-header-sub" th:text="${year} + '年' + ${month} + '月の概要'"></p>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="card-elevated p-3 h-100">
+          <div class="hint">収入</div>
+          <div class="fs-4 fw-bold" th:text="${income} + '円'"></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-elevated p-3 h-100">
+          <div class="hint">支出</div>
+          <div class="fs-4 fw-bold" th:text="${expense} + '円'"></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-elevated p-3 h-100">
+          <div class="hint">差額</div>
+          <div class="fs-4 fw-bold" th:text="${balance} + '円'"></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-elevated p-3 h-100">
+          <div class="hint">今月明細数</div>
+          <div class="fs-4 fw-bold" th:text="${entryCount} + '件'"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-4">
+        <div class="card-elevated p-3 h-100">
+          <div class="section-title">明細管理</div>
+          <div class="hint mb-3">明細の確認・検索・編集を行います。</div>
+          <a href="/accounts/list" class="btn btn-accent w-100">明細リストを開く</a>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-elevated p-3 h-100">
+          <div class="section-title">分析</div>
+          <div class="hint mb-3">グラフとレポートで支出傾向を確認します。</div>
+          <a href="/accounts/report" class="btn btn-outline-primary w-100 mb-2">レポートを開く</a>
+          <a href="/accounts/yearly" class="btn btn-outline-secondary w-100">年間収支を見る</a>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-elevated p-3 h-100">
+          <div class="section-title">登録</div>
+          <div class="hint mb-3">新規明細を登録します。</div>
+          <a href="/accounts/new" class="btn btn-accent-2 w-100">収支を登録</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

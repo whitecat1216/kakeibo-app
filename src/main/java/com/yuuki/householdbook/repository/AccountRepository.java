@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -22,4 +23,58 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query(value = "SELECT EXTRACT(MONTH FROM date) AS month, SUM(amount) FROM account WHERE user_id = :userId AND type = :type AND EXTRACT(YEAR FROM date) = :year GROUP BY EXTRACT(MONTH FROM date)", nativeQuery = true)
     List<Object[]> getMonthlyTotalsByUser(@Param("userId") Long userId, @Param("type") String type, @Param("year") int year);
+
+    @Query(value = "SELECT EXTRACT(MONTH FROM date) AS month, " +
+            "SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) " +
+            "FROM account WHERE user_id = :userId AND EXTRACT(YEAR FROM date) = :year " +
+            "GROUP BY EXTRACT(MONTH FROM date) ORDER BY month", nativeQuery = true)
+    List<Object[]> getMonthlyNetTotalsByUser(@Param("userId") Long userId, @Param("year") int year);
+
+    boolean existsByUserAndRecurringIdAndDate(AppUser user, Long recurringId, LocalDate date);
+
+    long countByUserAndCategory(AppUser user, com.yuuki.householdbook.entity.Category category);
+
+    long countByUserAndSource(AppUser user, com.yuuki.householdbook.entity.PaymentSource source);
+
+    @Query(value = "SELECT COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) " +
+            "FROM account WHERE user_id = :userId AND source_id = :sourceId", nativeQuery = true)
+    Integer getNetTotalBySource(@Param("userId") Long userId, @Param("sourceId") Long sourceId);
+
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN TRUE ELSE FALSE END FROM Account a " +
+            "WHERE a.user = :user " +
+            "AND a.date = :date " +
+            "AND a.type = :type " +
+            "AND a.amount = :amount " +
+            "AND COALESCE(a.item, '') = COALESCE(:item, '') " +
+            "AND COALESCE(a.memo, '') = COALESCE(:memo, '') " +
+            "AND ((:categoryId IS NULL AND a.category IS NULL) OR (a.category IS NOT NULL AND a.category.id = :categoryId)) " +
+            "AND ((:sourceId IS NULL AND a.source IS NULL) OR (a.source IS NOT NULL AND a.source.id = :sourceId))")
+    boolean existsDuplicate(@Param("user") AppUser user,
+                            @Param("date") LocalDate date,
+                            @Param("type") String type,
+                            @Param("amount") Integer amount,
+                            @Param("item") String item,
+                            @Param("memo") String memo,
+                            @Param("categoryId") Long categoryId,
+                            @Param("sourceId") Long sourceId);
+
+    @Query("SELECT a FROM Account a WHERE a.user = :user " +
+            "AND (:type IS NULL OR a.type = :type) " +
+            "AND (a.date >= COALESCE(:startDate, a.date)) " +
+            "AND (a.date <= COALESCE(:endDate, a.date)) " +
+            "AND (:categoryId IS NULL OR (a.category IS NOT NULL AND a.category.id = :categoryId)) " +
+            "AND (:sourceId IS NULL OR (a.source IS NOT NULL AND a.source.id = :sourceId)) " +
+            "AND (:minAmount IS NULL OR a.amount >= :minAmount) " +
+            "AND (:maxAmount IS NULL OR a.amount <= :maxAmount) " +
+            "AND (:memo IS NULL OR :memo = '' OR LOWER(a.memo) LIKE LOWER(CONCAT('%', :memo, '%'))) " +
+            "ORDER BY a.date DESC, a.id DESC")
+    List<Account> search(@Param("user") AppUser user,
+                         @Param("type") String type,
+                         @Param("startDate") LocalDate startDate,
+                         @Param("endDate") LocalDate endDate,
+                         @Param("categoryId") Long categoryId,
+                         @Param("sourceId") Long sourceId,
+                         @Param("minAmount") Integer minAmount,
+                         @Param("maxAmount") Integer maxAmount,
+                         @Param("memo") String memo);
 }

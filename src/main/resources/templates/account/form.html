@@ -5,15 +5,28 @@
   <title>収支登録フォーム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/app.css" rel="stylesheet">
 </head>
 <body>
-  <div class="container mt-4">
-    <h1 class="mb-4 text-center">収支登録フォーム</h1>
+  <div th:replace="~{fragments/sidebar :: appLayout}"></div>
+  <div class="app-content container-fluid px-3 px-lg-4 py-3">
+    <div class="app-header">
+      <p class="app-header-title">Transaction Editor</p>
+      <p class="app-header-sub">日付、カテゴリ、支払方法を揃えて入力するとレポート精度が上がります。</p>
+    </div>
+    <div class="mb-3">
+      <div class="tag mb-2">入力</div>
+      <h1 class="page-title mb-1">収支登録フォーム</h1>
+      <div class="hint">日付・カテゴリ・金額は必須です。迷ったらまずメモだけでも入れておくと後で探しやすいです。</div>
+    </div>
 
-    <form th:action="@{/accounts/save}" th:object="${account}" method="post" class="row g-3">
+    <div class="card-elevated p-3">
+      <form th:action="${account.id} != null ? @{/accounts/update} : @{/accounts/save}"
+            th:object="${account}" method="post" class="row g-3">
       <div class="col-12">
         <label class="form-label">日付</label>
         <input type="date" th:field="*{date}" class="form-control" required>
+        <div class="hint mt-1">カードや現金の利用日を基準に入れるのが一般的です。</div>
       </div>
 
       <div class="col-12">
@@ -26,7 +39,32 @@
 
       <div class="col-12">
         <label class="form-label">カテゴリ</label>
-        <input type="text" th:field="*{category}" class="form-control" required>
+        <div class="mb-2">
+          <div class="hint mb-1">よく使うカテゴリ（クリックで選択）</div>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="chip"
+                    th:each="c,iter : ${categories}"
+                    th:if="${iter.index < 6}"
+                    th:classappend="${c.type == 'income' ? ' chip-income' : (c.type == 'expense' ? ' chip-expense' : ' chip-both')}"
+                    th:attr="data-category-id=${c.id}"
+                    th:text="${c.name}"></button>
+          </div>
+        </div>
+        <select name="categoryId" class="form-select" required>
+          <option value="" disabled th:selected="${account.category == null}">選択してください</option>
+          <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                  th:selected="${account.category != null and c.id == account.category.id}"></option>
+        </select>
+        <div class="hint mt-1">カテゴリが足りない場合は「カテゴリ管理」から追加できます。</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">支払方法</label>
+        <select name="sourceId" class="form-select">
+          <option value="" th:selected="${account.source == null}">指定なし</option>
+          <option th:each="s : ${sources}" th:value="${s.id}" th:text="${s.name}"
+                  th:selected="${account.source != null and s.id == account.source.id}"></option>
+        </select>
+        <div class="hint mt-1">口座・財布・カードなどの残高推移に使います。</div>
       </div>
 
       <div class="col-12">
@@ -45,10 +83,33 @@
       </div>
 
       <div class="col-12 text-center">
-        <button type="submit" class="btn btn-primary w-100">登録</button>
+        <button type="submit" class="btn btn-accent w-100">保存</button>
         <a href="/accounts" class="btn btn-secondary w-100 mt-2">一覧に戻る</a>
       </div>
     </form>
+    </div>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const select = document.querySelector('select[name="categoryId"]');
+      const chips = document.querySelectorAll('.chip[data-category-id]');
+      if (select && select.value) {
+        chips.forEach((chip) => {
+          if (chip.getAttribute('data-category-id') === select.value) {
+            chip.classList.add('active');
+          }
+        });
+      }
+      chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const id = chip.getAttribute('data-category-id');
+          if (!select) return;
+          select.value = id;
+          chips.forEach((c) => c.classList.remove('active'));
+          chip.classList.add('active');
+        });
+      });
+    });
+  </script>
 </body>
 </html>

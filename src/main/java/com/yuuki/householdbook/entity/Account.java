@@ -15,7 +15,9 @@ public class Account {
 
     private String type; // "income" or "expense"
 
-    private String category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     private String item;
 
@@ -24,6 +26,13 @@ public class Account {
     private String memo;
 
     private LocalDate createdAt = LocalDate.now();
+
+    @Column(name = "recurring_id")
+    private Long recurringId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_id")
+    private PaymentSource source;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -39,8 +48,8 @@ public class Account {
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 
     public String getItem() { return item; }
     public void setItem(String item) { this.item = item; }
@@ -53,6 +62,12 @@ public class Account {
 
     public LocalDate getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+    public Long getRecurringId() { return recurringId; }
+    public void setRecurringId(Long recurringId) { this.recurringId = recurringId; }
+
+    public PaymentSource getSource() { return source; }
+    public void setSource(PaymentSource source) { this.source = source; }
 
     public AppUser getUser() { return user; }
     public void setUser(AppUser user) { this.user = user; }

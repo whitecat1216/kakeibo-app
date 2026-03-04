@@ -2,6 +2,7 @@ package com.yuuki.householdbook.controller;
 
 import com.yuuki.householdbook.entity.AppUser;
 import com.yuuki.householdbook.repository.UserRepository;
+import com.yuuki.householdbook.service.CategoryService;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,6 +16,9 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CategoryService categoryService;
 
     // ログイン画面表示
     @GetMapping("/login")
@@ -83,6 +87,7 @@ public String login(@RequestParam String identifier,
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
         user.setRole("USER"); // 初期ロール
         userRepository.save(user);
+        categoryService.createDefaultCategories(user);
 
         return "redirect:/login?registered";
     }

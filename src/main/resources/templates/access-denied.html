@@ -3,11 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>アクセス拒否</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/app.css" rel="stylesheet">
 </head>
-<body class="container mt-5">
-  <h2 class="text-danger">アクセス権限がありません</h2>
-  <p>このページは管理者のみが閲覧できます。</p>
-  <a href="login.html" class="btn btn-secondary">ホームに戻る</a>
+<body>
+  <div class="container mt-4">
+    <div class="card-elevated p-4 text-center" style="max-width: 720px; margin: 60px auto;">
+      <div class="tag mb-2">403</div>
+      <h2 class="page-title text-danger">アクセス権限がありません</h2>
+      <p class="hint mb-4">このページは管理者のみが閲覧できます。</p>
+      <a href="/login" class="btn btn-outline-secondary">ログイン画面へ戻る</a>
+    </div>
+  </div>
 </body>
 </html>
