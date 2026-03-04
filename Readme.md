@@ -1,112 +1,126 @@
-# 🐳 家計簿アプリ Docker 起動手順書
-📦 対象構成
-- Spring Boot（Java 17）
-- PostgreSQL（DB）
+# 家計簿アプリ（kakeibo-app）
+
+Spring Boot + PostgreSQL で作成した家計簿アプリです。  
+モバイル寄りの UI（ハンバーガーメニュー）で、明細管理・レポート・年間収支を利用できます。
+
+## 技術構成
+- Java 17
+- Spring Boot 3.2.x
+- Thymeleaf
+- PostgreSQL 15
 - Docker / Docker Compose
-- Gradle（ビルドツール）
+- Gradle 8.x
 
-📁 プロジェクト構成（例）
-``` kakeibo-app/ ├── Dockerfile ├── docker-compose.yml ├── build.gradle ├── src/ │   └── main/ │       ├── java/com/yuuki/householdbook/ │       └── resources/templates/ ```
+## 主な機能
+- ダッシュボード（最小サマリー）
+- 明細リスト（検索・期間フィルタ・編集・複製・一括削除）
+- レポート（前月比、前年同月比、上位支出カテゴリ、異常増加カテゴリ）
+- 年間収支（月別集計、累計推移グラフ）
+- CSVエクスポート / CSVインポート（重複スキップ対応）
+- カテゴリ管理（色・並び順・タイプ）
+- 支払方法管理（口座/財布/カード等）
+- 定期収支（毎月自動作成）
+- 管理者画面（ユーザー一覧、ユーザー家計簿参照）
 
+## 画面ルート
+- `/` -> `/login` にリダイレクト
+- `/accounts` ダッシュボード
+- `/accounts/list` 明細リスト
+- `/accounts/report` レポート
+- `/accounts/yearly` 年間収支
+- `/accounts/new` 収支登録
+- `/accounts/import` CSVインポート
+- `/categories` カテゴリ管理
+- `/sources` 支払方法管理
+- `/recurring` 定期収支
+- `/admin/users` 管理者メニュー
 
+## 起動方法（Docker）
+1. コンテナ起動
 
-✅ 1. .jar ファイルを生成
-./gradlew clean bootJar
+```bash
+docker compose up -d
+```
 
+2. 起動確認
 
-- 成果物は build/libs/app.jar
-- build.gradle に以下を追加するとファイル名が固定されて便利：
-bootJar {
-    archiveFileName = 'app.jar'
-}
+```bash
+docker compose ps
+docker logs household_app --tail 100
+```
 
+3. ブラウザ
+- [http://localhost:8080/login](http://localhost:8080/login)
 
+## 起動方法（ローカル bootRun）
+DB は Docker の PostgreSQL を利用する想定です。
 
-✅ 2. Dockerfile を作成
-FROM openjdk:17-jdk-slim
-WORKDIR /app
-COPY build/libs/app.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+1. DBのみ起動
 
+```bash
+docker compose up -d db
+```
 
+2. アプリ起動
 
-✅ 3. docker-compose.yml を作成
-version: '3.8'
+```bash
+./gradlew bootRun
+```
 
-services:
-  db:
-    image: postgres:15
-    container_name: household_db
-    environment:
-      POSTGRES_DB: household_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+3. ブラウザ
+- [http://localhost:8080/login](http://localhost:8080/login)
 
-  app:
-    build: .
-    container_name: household_app
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/household_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: true
-      SPRING_THYMELEAF_CACHE: false
+### ローカルDB接続設定
+`application.properties` は次の順で接続先を解決します。
 
-volumes:
-  pgdata:
+```properties
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/household_db}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:postgres}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:postgres}
+```
 
+- Docker DB のホスト公開ポートは `5433`（`docker-compose.yml`）
+- コンテナ内アプリは `db:5432` を使用
 
+## よくあるエラー
 
-✅ 4. 起動コマンド
-docker-compose up -d --remove-orphans
+### `bind: address already in use`（8080）
+`8080` を別プロセスが使用しています。
 
+```bash
+lsof -i :8080
+kill <PID>
+docker compose up -d
+```
 
-- -d：バックグラウンド実行
-- --remove-orphans：不要なコンテナを削除
+### `localhost:5433 への接続が拒絶されました`
+`household_db` が起動していないか、ポート不一致です。
 
-✅ 5. 状態確認
-docker ps
-docker logs household_app
+```bash
+docker compose ps
+docker compose up -d db
+docker logs household_db --tail 100
+```
 
+### `Task 'boot' is ambiguous`
+`./gradlew boot` ではなく完全なタスク名を指定してください。
 
-- Tomcat initialized with port 8080 → Webサーバー起動成功
-- HikariPool-1 - Start completed → DB接続成功
+```bash
+./gradlew bootRun
+./gradlew bootJar
+```
 
-✅ 6. ブラウザで確認
-http://localhost:8080/
+## 開発用コマンド
 
+```bash
+./gradlew compileJava
+./gradlew test
+./gradlew bootRun
+```
 
-- 404の場合は / に対応するコントローラーが未定義
-- HomeController を追加して redirect:/login などに設定
+## クリーンアップ
 
-✅ 7. 初期管理者登録（AdminInitializer）
-admin.setEmail("admin@example.com"); // ← 必須
-
-
-- email が null のままだと Hibernate が例外を投げて起動失敗します
-
-⚠️ よくあるエラーと対処法
-|  |  |  | 
-| email=null | AppUser.emailnullable=false | setEmail(...) | 
-|  | SPRING_DATASOURCE_URL | jdbc:postgresql://db:5432/household_db | 
-| .jar | bootJar | ./gradlew clean bootJar | 
-|  | / | HomeController | 
-
-
-
-🧼 クリーンアップ
-docker-compose down
+```bash
+docker compose down
 docker system prune -f
-
-
-
+```
